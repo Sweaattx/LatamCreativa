@@ -8,11 +8,5 @@
     "assets": {
         "directory": ".open-next/assets",
         "binding": "ASSETS"
-    },
-    "r2_buckets": [
-        {
-            "binding": "R2_BUCKET",
-            "bucket_name": "latamcreativa-storage"
-        }
-    ]
+    }
 }
