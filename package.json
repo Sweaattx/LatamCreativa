@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "analyze": "ANALYZE=true next build",
-    "build:cf": "npx @cloudflare/next-on-pages"
+    "build:cf": "npx @opennextjs/cloudflare"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
@@ -37,7 +37,6 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.16",
     "@eslint/eslintrc": "^3.3.3",
     "@opennextjs/cloudflare": "^1.16.5",
     "@types/node": "^22.10.0",
