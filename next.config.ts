@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
+      },
     ],
     // Optimización de imágenes - tamaños responsive
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
