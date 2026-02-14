@@ -1,0 +1,53 @@
+{
+  "name": "latamcreativa-next",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "analyze": "ANALYZE=true next build",
+    "build:cf": "npx @opennextjs/cloudflare"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.990.0",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.49.1",
+    "@tanstack/react-query": "^5.66.0",
+    "@tanstack/react-virtual": "^3.13.18",
+    "@tiptap/extension-image": "^2.14.0",
+    "@tiptap/extension-link": "^2.14.0",
+    "@tiptap/extension-placeholder": "^2.14.0",
+    "@tiptap/pm": "^2.14.0",
+    "@tiptap/react": "^2.14.0",
+    "@tiptap/starter-kit": "^2.14.0",
+    "@types/dompurify": "^3.0.5",
+    "browser-image-compression": "^2.0.2",
+    "dompurify": "^3.3.1",
+    "framer-motion": "^12.0.0",
+    "lenis": "^1.3.17",
+    "lucide-react": "^0.469.0",
+    "next": "^16.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@opennextjs/cloudflare": "^1.16.5",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  }
+}

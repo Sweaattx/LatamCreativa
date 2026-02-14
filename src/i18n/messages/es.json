@@ -1,0 +1,97 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "error": "Ha ocurrido un error",
+        "retry": "Reintentar",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "create": "Crear",
+        "search": "Buscar",
+        "filters": "Filtros",
+        "all": "Todas",
+        "noResults": "No se encontraron resultados",
+        "showMore": "Ver más",
+        "showLess": "Ver menos"
+    },
+    "nav": {
+        "home": "Inicio",
+        "blog": "Blog",
+        "portfolio": "Portafolio",
+        "forum": "Foro",
+        "jobs": "Empleos",
+        "courses": "Cursos",
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
+        "logout": "Cerrar sesión",
+        "profile": "Perfil",
+        "settings": "Configuración"
+    },
+    "auth": {
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "confirmPassword": "Confirmar contraseña",
+        "forgotPassword": "¿Olvidaste tu contraseña?",
+        "loginButton": "Iniciar sesión",
+        "registerButton": "Crear cuenta",
+        "orContinueWith": "O continúa con",
+        "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+        "dontHaveAccount": "¿No tienes una cuenta?",
+        "loginSuccess": "¡Bienvenido de nuevo!",
+        "registerSuccess": "¡Cuenta creada exitosamente!",
+        "loginError": "Error al iniciar sesión",
+        "registerError": "Error al crear la cuenta",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "weakPassword": "La contraseña es muy débil"
+    },
+    "blog": {
+        "title": "Blog",
+        "subtitle": "Artículos y tutoriales",
+        "latestPosts": "Últimos artículos",
+        "readMore": "Leer más",
+        "minRead": "min de lectura",
+        "comments": "Comentarios",
+        "likes": "Me gusta",
+        "share": "Compartir",
+        "writeComment": "Escribe un comentario...",
+        "noComments": "No hay comentarios aún",
+        "categories": "Categorías"
+    },
+    "portfolio": {
+        "title": "Portafolio",
+        "subtitle": "Proyectos creativos",
+        "viewProject": "Ver proyecto",
+        "likes": "Me gusta",
+        "views": "Vistas",
+        "addToCollection": "Añadir a colección",
+        "removeFromCollection": "Quitar de colección"
+    },
+    "forum": {
+        "title": "Foro",
+        "subtitle": "Comunidad de creativos",
+        "newThread": "Nueva discusión",
+        "replies": "Respuestas",
+        "views": "Vistas",
+        "lastReply": "Última respuesta",
+        "markAsSolution": "Marcar como solución",
+        "solution": "Solución"
+    },
+    "user": {
+        "profile": "Perfil",
+        "followers": "Seguidores",
+        "following": "Siguiendo",
+        "follow": "Seguir",
+        "unfollow": "Dejar de seguir",
+        "editProfile": "Editar perfil",
+        "projects": "Proyectos",
+        "articles": "Artículos"
+    },
+    "errors": {
+        "404": "Página no encontrada",
+        "500": "Error del servidor",
+        "networkError": "Error de conexión",
+        "unauthorized": "No autorizado",
+        "forbidden": "Acceso denegado"
+    }
+}
