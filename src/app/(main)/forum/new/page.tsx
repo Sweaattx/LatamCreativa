@@ -3,11 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { useCreateThread } from '@/hooks/useForumHooks';
-import { ForumEditor } from '@/components/forum/ForumEditor';
 import { FORUM_CATEGORIES } from '@/data/forumCategories';
+
+// Heavy TipTap editor loaded on demand
+const ForumEditor = dynamic(
+  () => import('@/components/forum/ForumEditor').then(m => ({ default: m.ForumEditor })),
+  { ssr: false, loading: () => <div className="h-[250px] bg-neutral-800/50 rounded-lg animate-pulse" /> }
+);
 
 export default function NewThreadPage() {
   const router = useRouter();

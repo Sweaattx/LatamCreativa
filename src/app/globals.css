@@ -112,7 +112,7 @@ html {
   --accent-600: #2563EB;
 }
 
-/* --- Override accent-* Tailwind custom tokens --- */
+/* --- Dev mode: amber/accent → blue (consolidated overrides) --- */
 [data-mode="dev"] .text-accent-50 {
   color: #EFF6FF !important;
 }
@@ -129,15 +129,28 @@ html {
   color: #93C5FD !important;
 }
 
-[data-mode="dev"] .text-accent-400 {
+[data-mode="dev"] .text-accent-400,
+[data-mode="dev"] .text-amber-400,
+[data-mode="dev"] .text-amber-400.fill-current,
+[data-mode="dev"] .hover\:text-accent-400:hover,
+[data-mode="dev"] .hover\:text-amber-400:hover,
+[data-mode="dev"] .group-hover\:text-accent-400:is(:where(.group):hover *),
+[data-mode="dev"] .dark\:text-amber-400:is(.dark *) {
   color: #60A5FA !important;
 }
 
-[data-mode="dev"] .text-accent-500 {
+[data-mode="dev"] .text-accent-500,
+[data-mode="dev"] .text-amber-500,
+[data-mode="dev"] .hover\:text-accent-500:hover,
+[data-mode="dev"] .hover\:text-amber-500:hover,
+[data-mode="dev"] .group-hover\:text-accent-500:is(:where(.group):hover *),
+[data-mode="dev"] .group-hover\:text-amber-500:is(:where(.group):hover *),
+[data-mode="dev"] .dark\:text-amber-500:is(.dark *) {
   color: #3B82F6 !important;
 }
 
-[data-mode="dev"] .text-accent-600 {
+[data-mode="dev"] .text-accent-600,
+[data-mode="dev"] .text-amber-600 {
   color: #2563EB !important;
 }
 
@@ -145,15 +158,28 @@ html {
   color: #1D4ED8 !important;
 }
 
-[data-mode="dev"] .bg-accent-500 {
-  background-color: #3B82F6 !important;
+[data-mode="dev"] .text-amber-500\/80 {
+  color: rgba(59, 130, 246, 0.8) !important;
 }
 
-[data-mode="dev"] .bg-accent-400 {
+[data-mode="dev"] .bg-accent-400,
+[data-mode="dev"] .bg-amber-400,
+[data-mode="dev"] .hover\:bg-accent-glow:hover,
+[data-mode="dev"] .hover\:bg-amber-400:hover {
   background-color: #60A5FA !important;
 }
 
-[data-mode="dev"] .bg-accent-600 {
+[data-mode="dev"] .bg-accent-500,
+[data-mode="dev"] .bg-amber-500,
+[data-mode="dev"] .hover\:bg-accent-500:hover,
+[data-mode="dev"] .hover\:bg-amber-500:hover {
+  background-color: #3B82F6 !important;
+}
+
+[data-mode="dev"] .bg-accent-600,
+[data-mode="dev"] .bg-amber-600,
+[data-mode="dev"] .hover\:bg-accent-600:hover,
+[data-mode="dev"] .hover\:bg-amber-600:hover {
   background-color: #2563EB !important;
 }
 
@@ -165,27 +191,24 @@ html {
   background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
-[data-mode="dev"] .hover\:bg-accent-500:hover {
-  background-color: #3B82F6 !important;
+[data-mode="dev"] .bg-accent-500\/5 {
+  background-color: rgba(59, 130, 246, 0.05) !important;
 }
 
-[data-mode="dev"] .hover\:bg-accent-600:hover {
-  background-color: #2563EB !important;
+[data-mode="dev"] .bg-accent-500\/10,
+[data-mode="dev"] .bg-amber-500\/10 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
-[data-mode="dev"] .hover\:bg-accent-glow:hover {
-  background-color: rgba(59, 130, 246, 0.15) !important;
+[data-mode="dev"] .bg-accent-500\/20,
+[data-mode="dev"] .bg-amber-500\/20 {
+  background-color: rgba(59, 130, 246, 0.2) !important;
 }
 
-[data-mode="dev"] .hover\:text-accent-400:hover {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .hover\:text-accent-500:hover {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .border-accent-500 {
+[data-mode="dev"] .border-accent-500,
+[data-mode="dev"] .border-amber-500,
+[data-mode="dev"] .focus\:border-accent-500:focus,
+[data-mode="dev"] .focus\:border-amber-500:focus {
   border-color: #3B82F6 !important;
 }
 
@@ -193,33 +216,35 @@ html {
   border-color: #60A5FA !important;
 }
 
-[data-mode="dev"] .group-hover\:text-accent-400:is(:where(.group):hover *) {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .group-hover\:text-accent-500:is(:where(.group):hover *) {
-  color: #3B82F6 !important;
-}
-
-/* accent with opacity modifiers */
-[data-mode="dev"] .bg-accent-500\/5 {
-  background-color: rgba(59, 130, 246, 0.05) !important;
-}
-
-[data-mode="dev"] .bg-accent-500\/10 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-[data-mode="dev"] .bg-accent-500\/20 {
-  background-color: rgba(59, 130, 246, 0.2) !important;
-}
-
-[data-mode="dev"] .border-accent-500\/20 {
-  border-color: rgba(59, 130, 246, 0.2) !important;
-}
-
+[data-mode="dev"] .border-accent-500\/20,
 [data-mode="dev"] .border-accent-500\/30 {
   border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-mode="dev"] .border-accent-500\/50,
+[data-mode="dev"] .border-amber-500\/50,
+[data-mode="dev"] .focus\:border-accent-500\/50:focus {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+[data-mode="dev"] .ring-amber-500,
+[data-mode="dev"] .hover\:ring-amber-500:hover {
+  --tw-ring-color: #3B82F6 !important;
+}
+
+[data-mode="dev"] .shadow-glow-orange,
+[data-mode="dev"] .hover\:shadow-glow-orange:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
+}
+
+[data-mode="dev"] .from-accent-500,
+[data-mode="dev"] .from-amber-500 {
+  --tw-gradient-from: #3B82F6 !important;
+}
+
+[data-mode="dev"] .to-accent-600,
+[data-mode="dev"] .to-orange-600 {
+  --tw-gradient-to: #2563EB !important;
 }
 
 [data-mode="dev"] .from-accent-500\/5 {
@@ -234,149 +259,12 @@ html {
   --tw-gradient-to: rgba(96, 165, 250, 0.05) !important;
 }
 
-[data-mode="dev"] .from-accent-500 {
-  --tw-gradient-from: #3B82F6 !important;
-}
-
-[data-mode="dev"] .to-accent-600 {
-  --tw-gradient-to: #2563EB !important;
-}
-
-/* shadow glow override */
-[data-mode="dev"] .shadow-glow-orange {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
-}
-
-[data-mode="dev"] .hover\:shadow-glow-orange:hover {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
-}
-
-/* Focus state overrides */
-[data-mode="dev"] .focus\:border-accent-500:focus {
-  border-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .focus\:border-accent-500\/50:focus {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-}
-
-[data-mode="dev"] .border-accent-500\/50 {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-}
-
-/* Force amber Tailwind classes to use CSS variables for mode-switching */
-[data-mode="dev"] .text-amber-500 {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .text-amber-400 {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .text-amber-600 {
-  color: #2563EB !important;
-}
-
-[data-mode="dev"] .bg-amber-500 {
-  background-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .bg-amber-400 {
-  background-color: #60A5FA !important;
-}
-
-[data-mode="dev"] .bg-amber-600 {
-  background-color: #2563EB !important;
-}
-
-[data-mode="dev"] .hover\:bg-amber-400:hover {
-  background-color: #60A5FA !important;
-}
-
-[data-mode="dev"] .hover\:bg-amber-500:hover {
-  background-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .hover\:bg-amber-600:hover {
-  background-color: #2563EB !important;
-}
-
-[data-mode="dev"] .hover\:text-amber-400:hover {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .hover\:text-amber-500:hover {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .border-amber-500 {
-  border-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .border-amber-500\/50 {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-}
-
-[data-mode="dev"] .ring-amber-500 {
-  --tw-ring-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .hover\:ring-amber-500:hover {
-  --tw-ring-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .focus\:border-amber-500:focus {
-  border-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .bg-amber-500\/10 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-[data-mode="dev"] .bg-amber-500\/20 {
-  background-color: rgba(59, 130, 246, 0.2) !important;
-}
-
-[data-mode="dev"] .text-amber-500\/80 {
-  color: rgba(59, 130, 246, 0.8) !important;
-}
-
-[data-mode="dev"] .group-hover\:text-amber-500:is(:where(.group):hover *) {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .from-amber-500 {
-  --tw-gradient-from: #3B82F6 !important;
-}
-
-[data-mode="dev"] .to-orange-600 {
-  --tw-gradient-to: #2563EB !important;
-}
-
 [data-mode="dev"] .from-amber-500\/20 {
   --tw-gradient-from: rgba(59, 130, 246, 0.2) !important;
 }
 
 [data-mode="dev"] .to-orange-600\/20 {
   --tw-gradient-to: rgba(37, 99, 235, 0.2) !important;
-}
-
-/* Dark mode variants */
-[data-mode="dev"] .dark\:text-amber-500:is(.dark *) {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .dark\:text-amber-400:is(.dark *) {
-  color: #60A5FA !important;
-}
-
-/* fill-current amber star ratings etc. */
-[data-mode="dev"] .text-amber-400.fill-current {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .text-amber-400 {
-  color: #60A5FA !important;
 }
 
 /* ========================================
@@ -439,26 +327,6 @@ a {
   pointer-events: none;
 }
 
-/* ========================================
-   Scrollbar
-   ======================================== */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
-}
 
 /* ========================================
    Focus States (Accessibility)

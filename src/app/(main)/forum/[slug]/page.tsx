@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import {
   ArrowLeft, MessageSquare, Eye, Heart, Share2,
   Clock, Send, Bookmark
@@ -11,9 +12,14 @@ import {
 import { useAppStore } from '@/hooks/useAppStore';
 import { useForumThread, useForumReplies, useAddReply } from '@/hooks/useForumHooks';
 import { ReplyCard } from '@/components/forum/ReplyCard';
-import { ForumEditor } from '@/components/forum/ForumEditor';
 import { getCategoryById, CATEGORY_COLOR_CLASSES } from '@/data/forumCategories';
 import { sanitizeHtml } from '@/utils/sanitizeHtml';
+
+// Heavy TipTap editor loaded on demand (only when user clicks Reply)
+const ForumEditor = dynamic(
+  () => import('@/components/forum/ForumEditor').then(m => ({ default: m.ForumEditor })),
+  { ssr: false, loading: () => <div className="h-[120px] bg-neutral-800/50 rounded-lg animate-pulse" /> }
+);
 
 export default function ThreadDetailPage() {
   const params = useParams();

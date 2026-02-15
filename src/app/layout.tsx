@@ -95,22 +95,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={inter.variable} suppressHydrationWarning>
-      <head>
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          ::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
-          ::-webkit-scrollbar-track { background: transparent !important; }
-          ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12) !important; border-radius: 3px !important; }
-          ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25) !important; }
-          ::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; background: transparent !important; }
-          ::-webkit-scrollbar-button:start:decrement,
-          ::-webkit-scrollbar-button:start:increment,
-          ::-webkit-scrollbar-button:end:decrement,
-          ::-webkit-scrollbar-button:end:increment { display: none !important; width: 0 !important; height: 0 !important; }
-          ::-webkit-scrollbar-corner { background: transparent !important; }
-          html, body, * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
-        `}} />
-      </head>
       <body className="bg-dark-950 text-white antialiased">
         <Providers>{children}</Providers>
       </body>
