@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, Check } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/hooks/useAppStore';
+import { usersProfile } from '@/services/supabase/users/profile';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -27,7 +28,7 @@ const getSupabaseAuthError = (error: unknown): string => {
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const supabase = getSupabaseClient();
-  const { state } = useAppStore();
+  const { state, actions } = useAppStore();
   const isDevMode = state.contentMode === 'dev';
 
   const [isLogin, setIsLogin] = useState(mode === 'login');
@@ -80,6 +81,16 @@ export function AuthForm({ mode }: AuthFormProps) {
           setError('Verifica tu correo electrónico primero');
           setIsLoading(false);
           return;
+        }
+        // Load profile into store BEFORE navigating
+        if (data.user) {
+          let profile = await usersProfile.getUserProfile(data.user.id);
+          if (!profile) {
+            profile = await usersProfile.initializeUserProfile(data.user);
+          }
+          if (profile) {
+            actions.setUser(profile);
+          }
         }
         router.push('/');
         router.refresh();

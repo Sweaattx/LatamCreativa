@@ -4,10 +4,9 @@
  * AuthListener Component
  * 
  * Listens to Supabase auth state changes and syncs the user state with the app store.
- * This ensures the app correctly reflects the user's auth status:
- * - On page load: validates the current session and loads the user profile
- * - On login: sets the user in the store
- * - On logout/session expiry: clears the user from the store
+ * - On mount: validates the current session and loads the user profile
+ * - On SIGNED_IN / TOKEN_REFRESHED: sets/refreshes the user in the store
+ * - On SIGNED_OUT: clears the user from the store
  * 
  * Must be rendered inside the Providers component.
  */
@@ -15,81 +14,85 @@ import { useEffect, useRef } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/hooks/useAppStore';
 import { usersProfile } from '@/services/supabase/users/profile';
+import { logger } from '@/utils/logger';
+
+async function loadProfile(userId: string, supabaseUser?: { email?: string; user_metadata?: Record<string, unknown> }) {
+    let profile = await usersProfile.getUserProfile(userId);
+    if (!profile && supabaseUser) {
+        profile = await usersProfile.initializeUserProfile(supabaseUser as Parameters<typeof usersProfile.initializeUserProfile>[0]);
+    }
+    return profile;
+}
 
 export function AuthListener() {
     const { actions } = useAppStore();
     const actionsRef = useRef(actions);
     actionsRef.current = actions;
-    const initialized = useRef(false);
 
     useEffect(() => {
-        if (initialized.current) return;
-        initialized.current = true;
-
         const supabase = getSupabaseClient();
         if (!supabase) {
             actionsRef.current.setLoadingAuth(false);
             return;
         }
 
+        let isMounted = true;
+
         // 1. Check current session on mount
         const initAuth = async () => {
             try {
                 const { data: { user: supabaseUser } } = await supabase.auth.getUser();
 
+                if (!isMounted) return;
+
                 if (supabaseUser) {
-                    // Fetch the full user profile from the database
-                    const profile = await usersProfile.getUserProfile(supabaseUser.id);
-                    if (profile) {
+                    const profile = await loadProfile(supabaseUser.id, supabaseUser);
+                    if (isMounted && profile) {
                         actionsRef.current.setUser(profile);
-                    } else {
-                        // User exists in auth but not in DB — initialize profile
-                        const newProfile = await usersProfile.initializeUserProfile(supabaseUser);
-                        if (newProfile) {
-                            actionsRef.current.setUser(newProfile);
-                        }
                     }
                 } else {
-                    // No valid session — clear cached user
                     actionsRef.current.setUser(null);
                 }
             } catch (error) {
-                console.error('Error initializing auth:', error);
-                actionsRef.current.setLoadingAuth(false);
+                logger.error('Error initializing auth:', error);
+                if (isMounted) {
+                    actionsRef.current.setLoadingAuth(false);
+                }
             }
         };
 
         initAuth();
 
-        // 2. Listen for auth state changes (login, logout, token refresh)
+        // 2. Listen for ALL auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                if (!isMounted) return;
+
                 try {
-                    if (event === 'SIGNED_IN' && session?.user) {
-                        let profile = await usersProfile.getUserProfile(session.user.id);
-                        if (!profile) {
-                            // New user — initialize profile in database
-                            profile = await usersProfile.initializeUserProfile(session.user);
-                        }
-                        if (profile) {
+                    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
+                        const profile = await loadProfile(session.user.id, session.user);
+                        if (isMounted && profile) {
                             actionsRef.current.setUser(profile);
-                        } else {
+                        } else if (isMounted) {
                             actionsRef.current.setLoadingAuth(false);
                         }
                     } else if (event === 'SIGNED_OUT') {
                         actionsRef.current.setUser(null);
                     }
                 } catch (error) {
-                    console.error('Error handling auth state change:', error);
-                    actionsRef.current.setLoadingAuth(false);
+                    logger.error('Error handling auth state change:', error);
+                    if (isMounted) {
+                        actionsRef.current.setLoadingAuth(false);
+                    }
                 }
             }
         );
 
         return () => {
+            isMounted = false;
             subscription.unsubscribe();
         };
     }, []);
 
-    return null; // This component renders nothing
+    return null;
 }
