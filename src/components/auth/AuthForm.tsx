@@ -71,27 +71,44 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (isLogin) {
+        console.log('[AuthForm] Attempting login with email:', email);
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (signInError) throw signInError;
+        if (signInError) {
+          console.error('[AuthForm] signInWithPassword error:', signInError);
+          throw signInError;
+        }
+        console.log('[AuthForm] signInWithPassword success, user:', data.user?.id);
+
         if (data.user && !data.user.email_confirmed_at) {
           await supabase.auth.signOut();
           setError('Verifica tu correo electrónico primero');
           setIsLoading(false);
           return;
         }
-        // Load profile into store BEFORE navigating
+
+        // Try to load profile into store BEFORE navigating (non-blocking)
         if (data.user) {
-          let profile = await usersProfile.getUserProfile(data.user.id);
-          if (!profile) {
-            profile = await usersProfile.initializeUserProfile(data.user);
-          }
-          if (profile) {
-            actions.setUser(profile);
+          try {
+            let profile = await usersProfile.getUserProfile(data.user.id);
+            console.log('[AuthForm] getUserProfile result:', profile ? 'found' : 'not found');
+            if (!profile) {
+              profile = await usersProfile.initializeUserProfile(data.user);
+              console.log('[AuthForm] initializeUserProfile result:', profile ? 'created' : 'null');
+            }
+            if (profile) {
+              actions.setUser(profile);
+              console.log('[AuthForm] setUser called with profile:', profile.id);
+            }
+          } catch (profileErr) {
+            // Profile loading failed — still redirect, AuthListener will retry
+            console.warn('[AuthForm] Profile loading failed, will retry on next page:', profileErr);
           }
         }
+
+        console.log('[AuthForm] Navigating to /');
         router.push('/');
         router.refresh();
       } else {
@@ -112,6 +129,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setVerificationSent(true);
       }
     } catch (err) {
+      console.error('[AuthForm] handleSubmit caught error:', err);
       setError(getSupabaseAuthError(err));
     } finally {
       setIsLoading(false);
