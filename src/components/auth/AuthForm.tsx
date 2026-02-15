@@ -103,8 +103,21 @@ export function AuthForm({ mode }: AuthFormProps) {
               console.log('[AuthForm] setUser called with profile:', profile.id);
             }
           } catch (profileErr) {
-            // Profile loading failed — still redirect, AuthListener will retry
-            console.warn('[AuthForm] Profile loading failed, will retry on next page:', profileErr);
+            console.warn('[AuthForm] Profile loading failed, using fallback:', profileErr);
+            // Create fallback user from Supabase auth data so UI reflects login
+            const fallbackUser = {
+              id: data.user.id,
+              email: data.user.email || '',
+              name: data.user.user_metadata?.full_name ||
+                data.user.user_metadata?.first_name ||
+                data.user.email?.split('@')[0] || 'Usuario',
+              avatar: data.user.user_metadata?.avatar_url ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.email || 'U')}&background=FF4D00&color=fff`,
+              role: 'Creative Member',
+              username: data.user.email?.split('@')[0] || 'usuario',
+            };
+            actions.setUser(fallbackUser as Parameters<typeof actions.setUser>[0]);
+            console.log('[AuthForm] setUser called with fallback user:', fallbackUser.id);
           }
         }
 
