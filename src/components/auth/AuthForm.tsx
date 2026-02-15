@@ -89,22 +89,32 @@ export function AuthForm({ mode }: AuthFormProps) {
           return;
         }
 
-        // Try to load profile into store BEFORE navigating (non-blocking)
+        // Try to load profile into store BEFORE navigating (with 5s timeout)
         if (data.user) {
           try {
-            let profile = await usersProfile.getUserProfile(data.user.id);
-            console.log('[AuthForm] getUserProfile result:', profile ? 'found' : 'not found');
-            if (!profile) {
-              profile = await usersProfile.initializeUserProfile(data.user);
-              console.log('[AuthForm] initializeUserProfile result:', profile ? 'created' : 'null');
-            }
+            const profilePromise = (async () => {
+              let profile = await usersProfile.getUserProfile(data.user!.id);
+              if (!profile) {
+                profile = await usersProfile.initializeUserProfile(data.user!);
+              }
+              return profile;
+            })();
+
+            // Race: profile fetch vs 5s timeout
+            const profile = await Promise.race([
+              profilePromise,
+              new Promise<null>((_, reject) =>
+                setTimeout(() => reject(new Error('Profile fetch timeout after 5s')), 5000)
+              )
+            ]);
+
             if (profile) {
               actions.setUser(profile);
-              console.log('[AuthForm] setUser called with profile:', profile.id);
+              console.log('[AuthForm] ✅ setUser called with profile:', profile.id);
             }
           } catch (profileErr) {
-            console.warn('[AuthForm] Profile loading failed, using fallback:', profileErr);
-            // Create fallback user from Supabase auth data so UI reflects login
+            console.warn('[AuthForm] Profile loading failed/timed out, using fallback:', profileErr);
+            // Create fallback user from Supabase auth data
             const fallbackUser = {
               id: data.user.id,
               email: data.user.email || '',
@@ -117,7 +127,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               username: data.user.email?.split('@')[0] || 'usuario',
             };
             actions.setUser(fallbackUser as Parameters<typeof actions.setUser>[0]);
-            console.log('[AuthForm] setUser called with fallback user:', fallbackUser.id);
+            console.log('[AuthForm] ✅ setUser called with fallback:', fallbackUser.id);
           }
         }
 
