@@ -1,34 +1,8 @@
 // ==============================================
-// SUPABASE API
+// SUPABASE API — Single re-export point
 // ==============================================
-import { projectsService } from './supabase/projects';
-import { articlesService } from './supabase/articles';
-import { usersService } from './supabase/users';
-import { notificationsService } from './supabase/notifications';
-import { collectionsService } from './supabase/collections';
-import { forumService } from './supabase/forum';
+// This file re-exports the aggregated API from the Supabase service layer.
+// All domain services are defined in ./supabase/index.ts
 
-// Re-export shared types for backward compatibility
+export { api } from './supabase';
 export type { PaginatedResult } from './supabase/utils';
-
-// Aggregated API Service
-// This acts as a facade, combining domain-specific services into a single access point.
-export const api = {
-  // Projects (Portfolio)
-  ...projectsService,
-
-  // Blog (Articles & Comments)
-  ...articlesService,
-
-  // Users (Profiles & Social)
-  ...usersService,
-
-  // Notifications
-  ...notificationsService,
-
-  // Collections
-  ...collectionsService,
-
-  // Forum
-  ...forumService
-};
