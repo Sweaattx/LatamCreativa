@@ -4,6 +4,7 @@
  * @module services/supabase/projects/likes
  */
 import { supabase } from '../../../lib/supabase';
+import { logger } from '../../../utils/logger';
 
 export const projectsLikes = {
     /**
@@ -41,7 +42,7 @@ export const projectsLikes = {
             await supabase.rpc('increment_project_likes', { project_id: projectId, amount: 1 } as never);
 
         } catch (error) {
-            console.error('Error liking project:', error);
+            logger.error('Error liking project:', error);
             throw error;
         }
     },
@@ -67,7 +68,7 @@ export const projectsLikes = {
             await supabase.rpc('increment_project_likes', { project_id: projectId, amount: -1 } as never);
 
         } catch (error) {
-            console.error('Error unliking project:', error);
+            logger.error('Error unliking project:', error);
             throw error;
         }
     },
@@ -81,7 +82,7 @@ export const projectsLikes = {
      */
     toggleLike: async (projectId: string, userId: string): Promise<boolean> => {
         const hasLike = await projectsLikes.hasUserLiked(projectId, userId);
-        
+
         if (hasLike) {
             await projectsLikes.unlikeProject(projectId, userId);
             return false;
@@ -111,7 +112,7 @@ export const projectsLikes = {
             if (error) throw error;
             return data !== null;
         } catch (error) {
-            console.error('Error checking like status:', error);
+            logger.error('Error checking like status:', error);
             return false;
         }
     },
@@ -133,7 +134,7 @@ export const projectsLikes = {
             if (error) throw error;
             return count || 0;
         } catch (error) {
-            console.error('Error getting like count:', error);
+            logger.error('Error getting like count:', error);
             return 0;
         }
     },
@@ -155,7 +156,7 @@ export const projectsLikes = {
             if (error) throw error;
             return ((data || []) as unknown as { target_id: string }[]).map(l => l.target_id);
         } catch (error) {
-            console.error('Error getting user liked projects:', error);
+            logger.error('Error getting user liked projects:', error);
             return [];
         }
     }

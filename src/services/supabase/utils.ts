@@ -9,6 +9,7 @@
 
 import { PostgrestError } from '@supabase/supabase-js';
 import { Database } from '../../types/database';
+import { logger } from '../../utils/logger';
 
 // ============================================================
 // CACHÉ EN MEMORIA OPTIMIZADO
@@ -336,7 +337,7 @@ export const mapDbArticleToArticle = (dbArticle: Record<string, unknown>): Recor
  */
 export const handleSupabaseError = (error: PostgrestError | null, context: string): never => {
   if (error) {
-    console.error(`Error in ${context}:`, error);
+    logger.error(`Error in ${context}:`, error);
     throw new Error(error.message || `Error en ${context}`);
   }
   throw new Error(`Error desconocido en ${context}`);

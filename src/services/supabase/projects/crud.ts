@@ -12,6 +12,7 @@ import { PortfolioItem } from '../../../types';
 import { PaginatedResult, mapDbProjectToProject, ProjectInsert } from '../utils';
 import { generateUniqueSlug } from '../../../utils/slugUtils';
 import { Json } from '../../../types/database';
+import { logger } from '../../../utils/logger';
 
 /** Tipo para items de galería en proyectos */
 interface GalleryItem {
@@ -50,7 +51,7 @@ export const projectsCrud = {
 
             // Generate unique slug and ID
             const slug = generateUniqueSlug(projectData.title || 'proyecto');
-            
+
             // Upload Cover Image
             let coverUrl = '';
             if (files.cover) {
@@ -132,7 +133,7 @@ export const projectsCrud = {
                 .single();
 
             if (error) throw error;
-            
+
             // Type cast for safe property access
             const newProject = newProjectRaw as { id: string; slug: string } | null;
             if (!newProject) throw new Error('Failed to create project');
@@ -140,18 +141,18 @@ export const projectsCrud = {
 
             // Update user stats
             try {
-                await supabase.rpc('increment_user_stat', { 
-                    user_id: userId, 
-                    stat_name: 'projects', 
-                    amount: 1 
+                await supabase.rpc('increment_user_stat', {
+                    user_id: userId,
+                    stat_name: 'projects',
+                    amount: 1
                 } as never);
             } catch (rpcError) {
-                console.warn('Could not update user stats:', rpcError);
+                logger.warn('Could not update user stats:', rpcError);
             }
 
             return { id: newProject.id, slug: newProject.slug };
         } catch (error) {
-            console.error("Error creating project:", error);
+            logger.error('Error creating project:', error);
             throw error;
         }
     },
@@ -252,7 +253,7 @@ export const projectsCrud = {
             if (galleryObjects !== undefined) updateData.gallery = galleryObjects;
             if (legacyImages !== undefined) updateData.images = legacyImages;
 
-             
+
             const { error } = await supabase
                 .from('projects')
                 .update(updateData as never)
@@ -261,7 +262,7 @@ export const projectsCrud = {
             if (error) throw error;
             updateProgress();
         } catch (error) {
-            console.error("Error updating project:", error);
+            logger.error('Error updating project:', error);
             throw error;
         }
     },
@@ -282,7 +283,7 @@ export const projectsCrud = {
                 .single();
 
             if (fetchError) throw fetchError;
-            
+
             // Type cast for safe property access
             const projectData = project as Record<string, unknown> | null;
 
@@ -312,17 +313,17 @@ export const projectsCrud = {
 
             // Update user stats
             try {
-                await supabase.rpc('increment_user_stat', { 
-                    user_id: userId, 
-                    stat_name: 'projects', 
-                    amount: -1 
+                await supabase.rpc('increment_user_stat', {
+                    user_id: userId,
+                    stat_name: 'projects',
+                    amount: -1
                 } as never);
             } catch (rpcError) {
-                console.warn('Could not update user stats:', rpcError);
+                logger.warn('Could not update user stats:', rpcError);
             }
 
         } catch (error) {
-            console.error("Error deleting project:", error);
+            logger.error('Error deleting project:', error);
             throw error;
         }
     },
@@ -348,10 +349,10 @@ export const projectsCrud = {
 
             if (error) throw error;
             if (!data) return null;
-            
+
             return mapDbProjectToProject(data as Record<string, unknown>) as unknown as PortfolioItem;
         } catch (error) {
-            console.error("Error fetching project:", error);
+            logger.error('Error fetching project:', error);
             return null;
         }
     },
@@ -431,7 +432,7 @@ export const projectsCrud = {
                 hasMore
             };
         } catch (error) {
-            console.error("Error fetching projects:", error);
+            logger.error('Error fetching projects:', error);
             return { data: [], lastId: null, hasMore: false };
         }
     },
@@ -455,7 +456,7 @@ export const projectsCrud = {
             if (error) throw error;
             return (data || []).map(p => mapDbProjectToProject(p as Record<string, unknown>) as unknown as PortfolioItem);
         } catch (error) {
-            console.error("Error fetching user projects:", error);
+            logger.error('Error fetching user projects:', error);
             return [];
         }
     },
@@ -469,7 +470,7 @@ export const projectsCrud = {
         try {
             await supabase.rpc('increment_project_views', { project_id: projectId } as never);
         } catch (error) {
-            console.warn('Error incrementing views:', error);
+            logger.warn('Error incrementing views:', error);
         }
     }
 };
