@@ -64,13 +64,24 @@ export function AuthListener() {
         // 2. Listen for auth state changes (login, logout, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                if (event === 'SIGNED_IN' && session?.user) {
-                    const profile = await usersProfile.getUserProfile(session.user.id);
-                    if (profile) {
-                        actionsRef.current.setUser(profile);
+                try {
+                    if (event === 'SIGNED_IN' && session?.user) {
+                        let profile = await usersProfile.getUserProfile(session.user.id);
+                        if (!profile) {
+                            // New user — initialize profile in database
+                            profile = await usersProfile.initializeUserProfile(session.user);
+                        }
+                        if (profile) {
+                            actionsRef.current.setUser(profile);
+                        } else {
+                            actionsRef.current.setLoadingAuth(false);
+                        }
+                    } else if (event === 'SIGNED_OUT') {
+                        actionsRef.current.setUser(null);
                     }
-                } else if (event === 'SIGNED_OUT') {
-                    actionsRef.current.setUser(null);
+                } catch (error) {
+                    console.error('Error handling auth state change:', error);
+                    actionsRef.current.setLoadingAuth(false);
                 }
             }
         );
