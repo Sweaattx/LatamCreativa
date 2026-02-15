@@ -38,7 +38,7 @@ export function HeroSection({ isLoggedIn }: HeroSectionProps) {
             />
 
             {/* Image marquee */}
-            <div className="absolute inset-0 w-full max-w-[1600px] mx-auto px-6 grid grid-cols-12 gap-12 h-full items-center">
+            <div className="absolute inset-0 w-full max-w-[1600px] mx-auto px-6 grid grid-cols-12 gap-12 h-full items-center pointer-events-none">
                 <div className="col-span-6 pointer-events-none" />
 
                 <div className="hidden lg:flex lg:col-span-7 h-full relative z-10 gap-5 [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)] cursor-pointer" style={{ transform: 'translateX(700px)' }}>
