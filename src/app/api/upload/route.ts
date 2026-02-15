@@ -16,12 +16,26 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit, rateLimitHeaders } from '@/lib/rateLimit';
 
 // Determinar qué storage usar
 const STORAGE_PROVIDER = process.env.NEXT_PUBLIC_STORAGE_PROVIDER || 'supabase';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit: 10 uploads per minute per IP
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+            || request.headers.get('x-real-ip')
+            || 'unknown';
+        const rateResult = checkRateLimit(`upload:${ip}`, { maxRequests: 10, windowSeconds: 60 });
+
+        if (!rateResult.allowed) {
+            return NextResponse.json(
+                { error: 'Demasiadas solicitudes. Intenta de nuevo en un momento.' },
+                { status: 429, headers: rateLimitHeaders(rateResult) }
+            );
+        }
+
         // Verificar autenticación
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
