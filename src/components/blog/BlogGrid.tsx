@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Eye, Heart } from 'lucide-react';
+import { useAppStore } from '@/hooks/useAppStore';
 
 interface BlogGridProps {
   articles: Record<string, unknown>[];
@@ -16,15 +17,43 @@ const DATE_OPTIONS: Intl.DateTimeFormatOptions = {
 };
 
 function BlogGridComponent({ articles }: BlogGridProps) {
+  const { state } = useAppStore();
+
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-LA', DATE_OPTIONS);
   }, []);
 
+  // Merge locally created blog posts with Supabase articles
+  const allArticles = useMemo(() => {
+    const localPosts = (state.blogPosts || []).map((post) => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt,
+      image: post.image,
+      author: post.author,
+      category: post.category,
+      tags: post.tags,
+      date: post.date,
+      slug: `${post.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${post.id}`,
+      likes: post.likes || 0,
+      views: 0,
+      comments: post.comments || 0,
+      created_at: post.date,
+      status: 'published',
+    }));
+
+    const existingIds = new Set(articles.map((a) => String(a.id)));
+    const uniqueLocal = localPosts.filter((p) => !existingIds.has(String(p.id)));
+
+    return [...uniqueLocal, ...articles];
+  }, [articles, state.blogPosts]);
+
   const { featured, rest } = useMemo(() => {
-    if (articles.length === 0) return { featured: null, rest: [] };
-    const [first, ...others] = articles;
+    if (allArticles.length === 0) return { featured: null, rest: [] };
+    const [first, ...others] = allArticles;
     return { featured: first, rest: others };
-  }, [articles]);
+  }, [allArticles]);
 
   if (!featured) {
     return (
@@ -99,6 +128,7 @@ function BlogGridComponent({ articles }: BlogGridProps) {
                     alt={article.title as string}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-dark-3 to-dark-2" />

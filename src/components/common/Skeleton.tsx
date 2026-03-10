@@ -81,7 +81,7 @@ export const ProfileHeaderSkeleton: React.FC = () => (
     <div className="relative">
         <Skeleton className="h-48 md:h-64 w-full rounded-none" />
         <div className="absolute -bottom-16 left-8 flex items-end gap-6">
-            <Skeleton className="h-32 w-32 rounded-full border-4 border-dark-1" />
+            <Skeleton className="h-32 w-32 rounded-full" />
             <div className="mb-4 space-y-2">
                 <Skeleton className="h-6 w-40" />
                 <Skeleton className="h-4 w-24" />

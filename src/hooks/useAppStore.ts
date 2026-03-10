@@ -37,10 +37,10 @@ const useZustandStore = create<AppStore>()(
       }),
       {
         name: 'app-storage',
-        version: 1,
+        version: 2,
         migrate: (persistedState: unknown, version: number) => {
+          const state = (persistedState || {}) as Record<string, unknown>;
           if (version < 1) {
-            const state = (persistedState || {}) as Record<string, unknown>;
             return {
               ...state,
               createdItems: [],
@@ -48,10 +48,20 @@ const useZustandStore = create<AppStore>()(
               collections: [],
               cartItems: [],
               likedItems: [],
+              savedItems: [],
               notifications: []
             };
           }
-          return persistedState as Record<string, unknown>;
+          if (version < 2) {
+            // Migration: savedItems changed from string[] to SavedItem[]
+            const oldSaved = (state.savedItems || []) as unknown[];
+            const cleanSaved = oldSaved.filter(
+              (item): item is { id: string; title: string; image: string; slug: string } =>
+                typeof item === 'object' && item !== null && 'id' in item
+            );
+            return { ...state, savedItems: cleanSaved };
+          }
+          return state;
         },
         partialize: (state) => ({
           user: state.user,
@@ -59,6 +69,7 @@ const useZustandStore = create<AppStore>()(
           blogPosts: state.blogPosts,
           cartItems: state.cartItems,
           likedItems: state.likedItems,
+          savedItems: state.savedItems,
           collections: state.collections,
           contentMode: state.contentMode,
           notifications: state.notifications
@@ -94,6 +105,7 @@ const selectAuthState = (state: AppStore) => ({
   user: state.user,
   cartItems: state.cartItems,
   likedItems: state.likedItems,
+  savedItems: state.savedItems,
   createdItems: state.createdItems,
   blogPosts: state.blogPosts,
   collections: state.collections,
@@ -133,6 +145,7 @@ const selectActions = (state: AppStore) => ({
   removeFromCart: state.removeFromCart,
   clearCart: state.clearCart,
   toggleLike: state.toggleLike,
+  toggleSave: state.toggleSave,
   addCreatedItem: state.addCreatedItem,
   addBlogPost: state.addBlogPost,
   markNotificationRead: state.markNotificationRead,

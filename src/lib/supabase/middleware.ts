@@ -49,6 +49,7 @@ export async function updateSession(request: NextRequest) {
     '/create',
     '/collections',
     '/notifications',
+    '/messages',
   ];
 
   const isProtectedRoute = protectedRoutes.some((route) =>

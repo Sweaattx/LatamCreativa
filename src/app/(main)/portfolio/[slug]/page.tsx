@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
 import { ProjectDetail } from '@/components/portfolio/ProjectDetail';
 import type { Metadata } from 'next';
 import type { PortfolioItem } from '@/types/content';
@@ -14,6 +13,7 @@ interface ProjectAuthor {
   name?: string;
   avatar?: string;
   role?: string;
+  location?: string;
 }
 
 // Generar metadata dinámica para SEO
@@ -90,6 +90,7 @@ interface DbUser {
   username: string | null;
   avatar: string | null;
   role: string | null;
+  location: string | null;
 }
 
 async function getProject(slug: string): Promise<{
@@ -133,7 +134,7 @@ async function getProject(slug: string): Promise<{
   // Obtener autor
   const { data: authorData } = await supabase
     .from('users')
-    .select('id, name, username, avatar, role')
+    .select('id, name, username, avatar, role, location')
     .eq('id', project.authorId)
     .single();
 
@@ -144,6 +145,7 @@ async function getProject(slug: string): Promise<{
     name: dbAuthor.name ?? undefined,
     avatar: dbAuthor.avatar ?? undefined,
     role: dbAuthor.role ?? undefined,
+    location: dbAuthor.location ?? undefined,
   } : null;
 
   // Obtener proyectos relacionados
@@ -170,12 +172,15 @@ async function getProject(slug: string): Promise<{
   return { project, author, relatedProjects };
 }
 
+import { ProjectFromStore } from '@/components/portfolio/ProjectFromStore';
+
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;
   const data = await getProject(slug);
 
   if (!data) {
-    notFound();
+    // Project not in Supabase — try local store
+    return <ProjectFromStore slug={slug} />;
   }
 
   const { project, author, relatedProjects } = data;

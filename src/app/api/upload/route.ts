@@ -36,6 +36,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Validate Origin header to prevent CSRF-like attacks
+        const origin = request.headers.get('origin');
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
+        if (origin && appUrl && !origin.startsWith(appUrl)) {
+            return NextResponse.json(
+                { error: 'Origen de solicitud no permitido.' },
+                { status: 403 }
+            );
+        }
+
         // Verificar autenticación
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -63,6 +73,14 @@ export async function POST(request: NextRequest) {
         if (!path) {
             return NextResponse.json(
                 { error: 'No se proporcionó la ruta de destino.' },
+                { status: 400 }
+            );
+        }
+
+        // Validate path to prevent directory traversal attacks
+        if (path.includes('..') || path.includes('\0') || /[<>:"|?*\\]/.test(path) || path.startsWith('/')) {
+            return NextResponse.json(
+                { error: 'Ruta de destino inválida.' },
                 { status: 400 }
             );
         }
@@ -97,7 +115,7 @@ export async function POST(request: NextRequest) {
         } else {
             // Subir a Supabase Storage (comportamiento actual)
             const { data, error: uploadError } = await supabase.storage
-                .from('public')
+                .from('media')
                 .upload(path, file, {
                     cacheControl: '3600',
                     upsert: true,
@@ -113,7 +131,7 @@ export async function POST(request: NextRequest) {
             }
 
             const { data: { publicUrl: url } } = supabase.storage
-                .from('public')
+                .from('media')
                 .getPublicUrl(data.path);
 
             publicUrl = url;

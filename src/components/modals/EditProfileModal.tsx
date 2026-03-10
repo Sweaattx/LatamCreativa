@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useRef } from 'react';
-import { X, Camera, Briefcase, GraduationCap, Plus, Trash2, GripVertical } from 'lucide-react';
+import { X, Camera, Plus, Trash2, Save } from 'lucide-react';
 import { useEditProfile } from '../../hooks/useEditProfile';
 import { TagInput } from '../ui/TagInput';
 import { COMMON_TAGS } from '../../data/tags';
@@ -31,97 +33,62 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
   if (!isOpen || !user) return null;
 
   const tabs = [
-    { id: 'general', label: 'General' },
+    { id: 'general', label: 'Información General' },
     { id: 'experience', label: 'Experiencia' },
     { id: 'education', label: 'Educación' },
-    { id: 'social', label: 'Social' },
+    { id: 'social', label: 'Social y Habilidades' },
   ] as const;
 
-  const onImageSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleImageChange(file, type);
-    }
-  };
 
   const addExperience = () => {
     updateCollection('experience', [
       ...collections.experience,
-      {
-        id: Date.now(),
-        role: '',
-        company: '',
-        period: '',
-        location: '',
-        description: '',
-      },
+      { id: Date.now(), role: 'Nuevo Rol', company: 'Empresa', period: '2023 - Presente', location: 'Ciudad, País', description: '' },
     ]);
   };
-
   const updateExperienceItem = (id: number | string, field: string, value: string) => {
-    updateCollection(
-      'experience',
-      collections.experience.map(exp => (exp.id === id ? { ...exp, [field]: value } : exp))
-    );
+    updateCollection('experience', collections.experience.map(exp => (exp.id === id ? { ...exp, [field]: value } : exp)));
   };
-
   const removeExperience = (id: number | string) => {
-    updateCollection(
-      'experience',
-      collections.experience.filter(exp => exp.id !== id)
-    );
+    updateCollection('experience', collections.experience.filter(exp => exp.id !== id));
   };
 
   const addEducation = () => {
     updateCollection('education', [
       ...collections.education,
-      {
-        id: Date.now(),
-        degree: '',
-        school: '',
-        period: '',
-        description: '',
-      },
+      { id: Date.now(), degree: '', school: '', period: '', description: '' },
     ]);
   };
-
   const updateEducationItem = (id: number | string, field: string, value: string) => {
-    updateCollection(
-      'education',
-      collections.education.map(edu => (edu.id === id ? { ...edu, [field]: value } : edu))
-    );
+    updateCollection('education', collections.education.map(edu => (edu.id === id ? { ...edu, [field]: value } : edu)));
   };
-
   const removeEducation = (id: number | string) => {
-    updateCollection(
-      'education',
-      collections.education.filter(edu => edu.id !== id)
-    );
+    updateCollection('education', collections.education.filter(edu => edu.id !== id));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-neutral-900 w-full max-w-3xl rounded-xl border border-neutral-800 flex flex-col max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
-          <h2 className="text-lg font-semibold text-white">Editar Perfil</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-neutral-500 hover:text-white transition-colors"
-          >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-dark-0 w-full max-w-[680px] rounded-2xl border border-dark-5/50 flex flex-col max-h-[90vh] overflow-hidden shadow-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ═══ Header ═══ */}
+        <div className="flex items-center justify-between px-7 py-5 border-b border-dark-5/40">
+          <h2 className="text-xl font-bold text-content-1">Editar Perfil</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-content-3 hover:text-content-1 hover:bg-dark-2 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-neutral-800 px-6">
+        {/* ═══ Tabs ═══ */}
+        <div className="flex border-b border-dark-5/40 px-7 gap-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                  ? 'border-amber-500 text-amber-500'
-                  : 'border-transparent text-neutral-500 hover:text-white'
+              className={`py-3.5 px-3 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+                ? 'border-accent-500 text-accent-400'
+                : 'border-transparent text-content-3 hover:text-content-2'
                 }`}
             >
               {tab.label}
@@ -129,231 +96,181 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
           ))}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* General Tab */}
+        {/* ═══ Scrollable Content ═══ */}
+        <div className="flex-1 overflow-y-auto px-7 py-6 custom-scrollbar">
+
+          {/* ──── GENERAL TAB ──── */}
           {activeTab === 'general' && (
-            <div className="space-y-6">
-              {/* Cover Image */}
-              <div className="relative h-32 bg-neutral-800 rounded-xl overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={images.previewCover || user.coverImage || 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800'}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => coverInputRef.current?.click()}
-                  className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-sm rounded-lg flex items-center gap-2 transition-colors"
-                >
-                  <Camera className="w-4 h-4" />
-                  Cambiar
-                </button>
-                <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onImageSelect(e, 'cover')}
-                  className="hidden"
-                />
+            <div className="space-y-5">
+              {/* Cover Banner */}
+              <div>
+                <div className="relative h-36 rounded-xl overflow-hidden bg-dark-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    key={images.previewCover || formData.coverUrl || ''}
+                    src={images.previewCover || formData.coverUrl || (user as unknown as Record<string, string>).cover_image || user.coverImage || 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800'}
+                    alt="" className="w-full h-full object-cover"
+                    style={{ objectPosition: `center ${formData.coverPosition ?? 50}%` }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800'; }}
+                  />
+                  <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded text-[10px] text-white/60">
+                    Imagen o GIF
+                  </span>
+                  <input ref={coverInputRef} type="file" accept="image/*,image/gif" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange(f, 'cover'); }} className="hidden" />
+                </div>
+                <div className="flex items-center gap-3 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Pegar URL de GIF o imagen..."
+                    value={formData.coverUrl || ''}
+                    onChange={(e) => handleInputChange('coverUrl' as keyof typeof formData, e.target.value as never)}
+                    className="flex-1 h-8 px-3 text-xs bg-dark-2 border border-dark-5 rounded-lg text-content-1 placeholder:text-content-3 focus:outline-none focus:border-dark-6 transition-colors"
+                  />
+                  <button
+                    onClick={() => coverInputRef.current?.click()}
+                    className="flex items-center gap-1.5 text-xs text-content-3 hover:text-content-1 transition-colors flex-shrink-0"
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Subir archivo
+                  </button>
+                </div>
+                {/* Cover Position Slider */}
+                <div className="mt-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-content-3 uppercase tracking-wider font-semibold">Ajustar posición</span>
+                    <span className="text-[10px] text-accent-400 font-mono">{formData.coverPosition ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={formData.coverPosition ?? 50}
+                    onChange={(e) => handleInputChange('coverPosition' as keyof typeof formData, Number(e.target.value) as never)}
+                    className="w-full h-1.5 bg-dark-3 rounded-full appearance-none cursor-pointer accent-accent-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-500 [&::-webkit-slider-thumb]:cursor-pointer"
+                  />
+                  <div className="flex justify-between">
+                    {[{ label: 'Arriba', val: 0 }, { label: 'Centro', val: 50 }, { label: 'Abajo', val: 100 }].map(p => (
+                      <button
+                        key={p.val}
+                        onClick={() => handleInputChange('coverPosition' as keyof typeof formData, p.val as never)}
+                        className={`text-[9px] font-medium transition-colors ${formData.coverPosition === p.val ? 'text-accent-400' : 'text-content-3/50 hover:text-content-3'}`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Avatar */}
-              <div className="flex items-end gap-4 -mt-12 ml-4 relative z-10">
-                <div className="relative group">
+              {/* Avatar + Name fields */}
+              <div className="flex gap-5 items-start">
+                <div className="relative group flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={images.previewAvatar || user.avatar || `https://ui-avatars.com/api/?name=${user.name}`}
                     alt="Avatar"
-                    className="w-20 h-20 rounded-xl object-cover border-4 border-neutral-900"
+                    className="w-[88px] h-[88px] rounded-2xl object-cover"
                   />
-                  <button
-                    onClick={() => avatarInputRef.current?.click()}
-                    className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+                  <button onClick={() => avatarInputRef.current?.click()}
+                    className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="w-5 h-5 text-white" />
                   </button>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => onImageSelect(e, 'avatar')}
-                    className="hidden"
-                  />
+                  <input ref={avatarInputRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange(f, 'avatar'); }} className="hidden" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <FieldGroup label="Nombres *">
+                    <input type="text" value={formData.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      className="modal-input" placeholder="Tu nombre" />
+                  </FieldGroup>
+                  <FieldGroup label="Apellidos *">
+                    <input type="text" value={formData.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      className="modal-input" placeholder="Tus apellidos" />
+                  </FieldGroup>
                 </div>
               </div>
 
-              {/* Form Fields */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Nombre</label>
-                  <input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Apellido</label>
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
+              {/* Rol Profesional */}
+              <FieldGroup label="Rol Profesional *">
+                <input type="text" value={formData.role} onChange={(e) => handleInputChange('role', e.target.value)}
+                  className="modal-input" placeholder="Ej: 3D Artist & Designer" />
+              </FieldGroup>
 
+              {/* Username */}
+              <FieldGroup label="Nombre de Usuario *">
+                <input type="text" value={formData.username} onChange={(e) => handleInputChange('username', e.target.value)}
+                  className="modal-input" placeholder="username" />
+                <p className="text-[10px] text-content-3 mt-1">latamcreativa.com/user/{formData.username || 'tu-usuario'}</p>
+              </FieldGroup>
+
+              {/* País + Ciudad */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Usuario</label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange('username', e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Rol</label>
-                  <input
-                    type="text"
-                    value={formData.role}
-                    onChange={(e) => handleInputChange('role', e.target.value)}
-                    placeholder="Ej: Diseñador UI/UX"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1.5">Bio</label>
-                <textarea
-                  value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">País</label>
-                  <select
-                    value={formData.country}
-                    onChange={(e) => handleInputChange('country', e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="">Seleccionar país</option>
-                    {LATAM_COUNTRIES.map(country => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
+                <FieldGroup label="País *">
+                  <select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}
+                    className="modal-input appearance-none">
+                    <option value="">Seleccionar</option>
+                    {LATAM_COUNTRIES.map(c => (<option key={c} value={c}>{c}</option>))}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-400 mb-1.5">Ciudad</label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Tu ciudad"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
+                </FieldGroup>
+                <FieldGroup label="Ciudad">
+                  <input type="text" value={formData.city} onChange={(e) => handleInputChange('city', e.target.value)}
+                    className="modal-input" placeholder="Ciudad" />
+                </FieldGroup>
               </div>
 
-              {/* Available for work */}
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.availableForWork}
-                  onChange={(e) => handleInputChange('availableForWork', e.target.checked)}
-                  className="w-4 h-4 rounded border-neutral-600 text-amber-500 focus:ring-amber-500"
-                />
-                <span className="text-sm text-neutral-300">Disponible para trabajo</span>
-              </label>
+              {/* Bio */}
+              <FieldGroup label="Biografía">
+                <textarea value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)}
+                  rows={3} className="modal-input resize-none" placeholder="Cuéntanos sobre ti..." />
+              </FieldGroup>
             </div>
           )}
 
-          {/* Experience Tab */}
+          {/* ──── EXPERIENCE TAB ──── */}
           {activeTab === 'experience' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-white flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-amber-500" />
-                  Experiencia laboral
-                </h3>
-                <button
-                  onClick={addExperience}
-                  className="px-3 py-1.5 text-sm bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  Agregar
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-content-1">Historial Laboral</h3>
+                <button onClick={addExperience}
+                  className="px-4 py-2 text-sm bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-colors flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" /> Añadir Puesto
                 </button>
               </div>
 
               {collections.experience.length === 0 ? (
-                <p className="text-neutral-500 text-sm text-center py-8">
-                  No has agregado experiencia laboral aún
-                </p>
+                <div className="text-center py-16 border border-dark-5/30 rounded-xl bg-dark-1/30">
+                  <p className="text-content-3 text-sm">No has agregado experiencia laboral aún</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {collections.experience.map((exp) => (
-                    <div
-                      key={exp.id}
-                      className="p-4 bg-neutral-800/50 rounded-xl border border-neutral-800 space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2 text-neutral-500">
-                          <GripVertical className="w-4 h-4 cursor-grab" />
-                        </div>
-                        <button
-                          onClick={() => removeExperience(exp.id)}
-                          className="p-1 text-neutral-500 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <div key={exp.id} className="p-5 rounded-xl border border-dark-5/40 space-y-4 relative bg-dark-1/20">
+                      <button onClick={() => removeExperience(exp.id)}
+                        className="absolute top-4 right-4 p-1.5 text-content-3 hover:text-red-400 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="grid grid-cols-2 gap-4 pr-8">
+                        <FieldGroup label="Cargo">
+                          <input type="text" value={exp.role} onChange={(e) => updateExperienceItem(exp.id, 'role', e.target.value)}
+                            className="modal-input" placeholder="Nuevo Rol" />
+                        </FieldGroup>
+                        <FieldGroup label="Empresa">
+                          <input type="text" value={exp.company} onChange={(e) => updateExperienceItem(exp.id, 'company', e.target.value)}
+                            className="modal-input" placeholder="Empresa" />
+                        </FieldGroup>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          placeholder="Puesto"
-                          value={exp.role}
-                          onChange={(e) => updateExperienceItem(exp.id, 'role', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Empresa"
-                          value={exp.company}
-                          onChange={(e) => updateExperienceItem(exp.id, 'company', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Período (ej: 2020 - Presente)"
-                          value={exp.period}
-                          onChange={(e) => updateExperienceItem(exp.id, 'period', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Ubicación"
-                          value={exp.location || ''}
-                          onChange={(e) => updateExperienceItem(exp.id, 'location', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FieldGroup label="Período">
+                          <input type="text" value={exp.period} onChange={(e) => updateExperienceItem(exp.id, 'period', e.target.value)}
+                            className="modal-input" placeholder="2023 - Presente" />
+                        </FieldGroup>
+                        <FieldGroup label="Ubicación">
+                          <input type="text" value={exp.location || ''} onChange={(e) => updateExperienceItem(exp.id, 'location', e.target.value)}
+                            className="modal-input" placeholder="Ciudad, País" />
+                        </FieldGroup>
                       </div>
-                      <textarea
-                        placeholder="Descripción del puesto..."
-                        value={exp.description}
-                        onChange={(e) => updateExperienceItem(exp.id, 'description', e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500 resize-none"
-                      />
+                      <FieldGroup label="Descripción">
+                        <textarea value={exp.description} onChange={(e) => updateExperienceItem(exp.id, 'description', e.target.value)}
+                          rows={3} className="modal-input resize-y" placeholder="Descripción del puesto..." />
+                      </FieldGroup>
                     </div>
                   ))}
                 </div>
@@ -361,75 +278,47 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             </div>
           )}
 
-          {/* Education Tab */}
+          {/* ──── EDUCATION TAB ──── */}
           {activeTab === 'education' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-white flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-amber-500" />
-                  Educación
-                </h3>
-                <button
-                  onClick={addEducation}
-                  className="px-3 py-1.5 text-sm bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  Agregar
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-content-1">Formación Académica</h3>
+                <button onClick={addEducation}
+                  className="px-4 py-2 text-sm bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-colors flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" /> Añadir Estudio
                 </button>
               </div>
 
               {collections.education.length === 0 ? (
-                <p className="text-neutral-500 text-sm text-center py-8">
-                  No has agregado educación aún
-                </p>
+                <div className="text-center py-16 border border-dark-5/30 rounded-xl bg-dark-1/30">
+                  <p className="text-content-3 text-sm">No has agregado educación aún</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {collections.education.map((edu) => (
-                    <div
-                      key={edu.id}
-                      className="p-4 bg-neutral-800/50 rounded-xl border border-neutral-800 space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2 text-neutral-500">
-                          <GripVertical className="w-4 h-4 cursor-grab" />
-                        </div>
-                        <button
-                          onClick={() => removeEducation(edu.id)}
-                          className="p-1 text-neutral-500 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <div key={edu.id} className="p-5 rounded-xl border border-dark-5/40 space-y-4 relative bg-dark-1/20">
+                      <button onClick={() => removeEducation(edu.id)}
+                        className="absolute top-4 right-4 p-1.5 text-content-3 hover:text-red-400 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="grid grid-cols-2 gap-4 pr-8">
+                        <FieldGroup label="Título">
+                          <input type="text" value={edu.degree} onChange={(e) => updateEducationItem(edu.id, 'degree', e.target.value)}
+                            className="modal-input" placeholder="Título obtenido" />
+                        </FieldGroup>
+                        <FieldGroup label="Institución">
+                          <input type="text" value={edu.school} onChange={(e) => updateEducationItem(edu.id, 'school', e.target.value)}
+                            className="modal-input" placeholder="Universidad / Instituto" />
+                        </FieldGroup>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          placeholder="Título"
-                          value={edu.degree}
-                          onChange={(e) => updateEducationItem(edu.id, 'degree', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Institución"
-                          value={edu.school}
-                          onChange={(e) => updateEducationItem(edu.id, 'school', e.target.value)}
-                          className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Período"
-                          value={edu.period}
-                          onChange={(e) => updateEducationItem(edu.id, 'period', e.target.value)}
-                          className="col-span-2 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                        />
-                      </div>
-                      <textarea
-                        placeholder="Descripción..."
-                        value={edu.description || ''}
-                        onChange={(e) => updateEducationItem(edu.id, 'description', e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500 resize-none"
-                      />
+                      <FieldGroup label="Período">
+                        <input type="text" value={edu.period} onChange={(e) => updateEducationItem(edu.id, 'period', e.target.value)}
+                          className="modal-input" placeholder="2019 - 2023" />
+                      </FieldGroup>
+                      <FieldGroup label="Descripción">
+                        <textarea value={edu.description || ''} onChange={(e) => updateEducationItem(edu.id, 'description', e.target.value)}
+                          rows={2} className="modal-input resize-y" placeholder="Descripción..." />
+                      </FieldGroup>
                     </div>
                   ))}
                 </div>
@@ -437,101 +326,107 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             </div>
           )}
 
-          {/* Social Tab */}
+          {/* ──── SOCIAL & SKILLS TAB ──── */}
           {activeTab === 'social' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Skills */}
               <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-2">Habilidades</label>
+                <h3 className="text-base font-bold text-content-1 mb-4">Habilidades</h3>
                 <TagInput
                   tags={collections.skills}
                   onAddTag={(tag) => updateCollection('skills', [...collections.skills, tag])}
                   onRemoveTag={(tag) => updateCollection('skills', collections.skills.filter(t => t !== tag))}
                   suggestions={COMMON_TAGS}
-                  placeholder="Añade tus habilidades..."
+                  placeholder="Busca o añade una habilidad..."
                 />
               </div>
 
+              <div className="border-t border-dark-5/30" />
+
               {/* Social Links */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-neutral-400">Redes sociales</h3>
+              <div>
+                <h3 className="text-base font-bold text-content-1 mb-4">Redes</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-neutral-500 mb-1">Twitter/X</label>
-                    <input
-                      type="text"
-                      value={collections.socialLinks.twitter || ''}
-                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, twitter: e.target.value })}
-                      placeholder="@usuario"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-neutral-500 mb-1">LinkedIn</label>
-                    <input
-                      type="text"
-                      value={collections.socialLinks.linkedin || ''}
-                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, linkedin: e.target.value })}
-                      placeholder="URL de LinkedIn"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-neutral-500 mb-1">Instagram</label>
-                    <input
-                      type="text"
-                      value={collections.socialLinks.instagram || ''}
-                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, instagram: e.target.value })}
-                      placeholder="@usuario"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-neutral-500 mb-1">Behance</label>
-                    <input
-                      type="text"
-                      value={collections.socialLinks.behance || ''}
-                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, behance: e.target.value })}
-                      placeholder="URL de Behance"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-neutral-500 mb-1">Dribbble</label>
-                    <input
-                      type="text"
-                      value={collections.socialLinks.dribbble || ''}
-                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, dribbble: e.target.value })}
-                      placeholder="URL de Dribbble"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
+                  <FieldGroup label="Instagram">
+                    <input type="text" value={collections.socialLinks.instagram || ''} placeholder="https://instagram.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, instagram: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="X (Twitter)">
+                    <input type="text" value={collections.socialLinks.twitter || ''} placeholder="https://x.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, twitter: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="YouTube">
+                    <input type="text" value={collections.socialLinks.youtube || ''} placeholder="https://youtube.com/@canal"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, youtube: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="TikTok">
+                    <input type="text" value={collections.socialLinks.tiktok || ''} placeholder="https://tiktok.com/@usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, tiktok: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="GitHub">
+                    <input type="text" value={collections.socialLinks.github || ''} placeholder="https://github.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, github: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="LinkedIn">
+                    <input type="text" value={collections.socialLinks.linkedin || ''} placeholder="https://linkedin.com/in/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, linkedin: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Behance">
+                    <input type="text" value={collections.socialLinks.behance || ''} placeholder="https://behance.net/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, behance: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Dribbble">
+                    <input type="text" value={collections.socialLinks.dribbble || ''} placeholder="https://dribbble.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, dribbble: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Artstation">
+                    <input type="text" value={collections.socialLinks.artstation || ''} placeholder="https://artstation.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, artstation: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Pinterest">
+                    <input type="text" value={collections.socialLinks.pinterest || ''} placeholder="https://pinterest.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, pinterest: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Vimeo">
+                    <input type="text" value={collections.socialLinks.vimeo || ''} placeholder="https://vimeo.com/usuario"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, vimeo: e.target.value })} className="modal-input" />
+                  </FieldGroup>
+                  <FieldGroup label="Website Personal">
+                    <input type="text" value={collections.socialLinks.website || ''} placeholder="https://miweb.com"
+                      onChange={(e) => updateCollection('socialLinks', { ...collections.socialLinks, website: e.target.value })} className="modal-input" />
+                  </FieldGroup>
                 </div>
+              </div>
+
+              <div className="border-t border-dark-5/30" />
+
+              {/* Available for work toggle */}
+              <div className="flex items-center justify-between p-5 bg-dark-1/40 rounded-xl border border-dark-5/30">
+                <div>
+                  <p className="text-sm font-semibold text-content-1">Disponible para trabajar</p>
+                  <p className="text-xs text-content-3 mt-0.5">Muestra en tu perfil que estás buscando nuevas oportunidades.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
+                  <input type="checkbox" checked={formData.availableForWork}
+                    onChange={(e) => handleInputChange('availableForWork', e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-dark-3 rounded-full peer peer-checked:bg-green-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all border border-dark-5/50 peer-checked:border-green-600" />
+                </label>
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-800">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
-          >
+        {/* ═══ Footer ═══ */}
+        <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-dark-5/40">
+          <button onClick={onClose} className="px-5 py-2.5 text-sm text-content-3 hover:text-content-1 transition-colors font-medium">
             Cancelar
           </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-4 py-2 bg-amber-500 text-black font-medium rounded-lg hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
+          <button onClick={handleSave} disabled={isSaving}
+            className="px-6 py-2.5 bg-accent-500 text-white text-sm font-semibold rounded-xl hover:bg-accent-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
             {isSaving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                Guardando...
-              </>
+              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Guardando...</>
             ) : (
-              'Guardar cambios'
+              <><Save className="w-4 h-4" /> Guardar Cambios</>
             )}
           </button>
         </div>
@@ -539,5 +434,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     </div>
   );
 };
+
+/* ─── Reusable label + field wrapper ─── */
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-content-3 uppercase tracking-wider mb-1.5">{label}</label>
+      {children}
+    </div>
+  );
+}
 
 export default EditProfileModal;

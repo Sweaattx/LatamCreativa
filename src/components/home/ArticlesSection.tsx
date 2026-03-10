@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, Clock } from 'lucide-react';
-import { mockArticles, MockArticle } from '@/data/homeData';
+import { mockArticles as STATIC_ARTICLES, MockArticle } from '@/data/homeData';
+import { supabase } from '@/lib/supabase';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useAppStore } from '@/hooks/useAppStore';
 
@@ -13,6 +14,31 @@ export function ArticlesSection() {
     const [sectionRef, isVisible] = useScrollReveal<HTMLElement>();
     const { state } = useAppStore();
     const isDevMode = state.contentMode === 'dev';
+    const [articles, setArticles] = useState<MockArticle[]>(STATIC_ARTICLES);
+
+    const fetchArticles = useCallback(async () => {
+        try {
+            const { data, error } = await (supabase as any).from('articles').select('id, title, excerpt, slug, image_url, category, read_time, author:profiles(full_name, avatar_url)').eq('status', 'published').order('created_at', { ascending: false }).limit(6);
+            if (!error && data && data.length > 0) {
+                setArticles(data.map((a: Record<string, unknown>) => {
+                    const author = a.author as Record<string, string> | null;
+                    return {
+                        id: a.id as string,
+                        title: a.title as string,
+                        excerpt: (a.excerpt as string) || '',
+                        author: author?.full_name || 'Autor',
+                        authorAvatar: author?.avatar_url || 'https://ui-avatars.com/api/?name=A&background=6366f1&color=fff',
+                        image: (a.image_url as string) || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop',
+                        category: (a.category as string) || 'General',
+                        readTime: (a.read_time as string) || '5 min',
+                        slug: (a.slug as string) || ''
+                    };
+                }));
+            }
+        } catch { /* fallback to static */ }
+    }, []);
+
+    useEffect(() => { fetchArticles(); }, [fetchArticles]);
 
     return (
         <section ref={sectionRef} className="py-20 bg-dark-0">
@@ -43,7 +69,7 @@ export function ArticlesSection() {
 
                 {/* Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {mockArticles.map((article: MockArticle, i: number) => (
+                    {articles.map((article: MockArticle, i: number) => (
                         <motion.article
                             key={article.id}
                             initial={{ opacity: 0, y: 10 }}

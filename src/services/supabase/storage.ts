@@ -37,7 +37,7 @@ export const storageService = {
      * @param bucket - Nombre del bucket (default: 'public')
      * @returns true si la eliminación fue exitosa, false si no
      */
-    deleteFromPath: async (path: string, bucket = 'public'): Promise<boolean> => {
+    deleteFromPath: async (path: string, bucket = 'media'): Promise<boolean> => {
         if (!path) return false;
 
         try {
@@ -60,7 +60,7 @@ export const storageService = {
      * @param bucket - Nombre del bucket (default: 'public')
      * @returns true si la eliminación fue exitosa, false si no
      */
-    deleteFromUrl: async (url: string, bucket = 'public'): Promise<boolean> => {
+    deleteFromUrl: async (url: string, bucket = 'media'): Promise<boolean> => {
         if (!url) return false;
 
         try {
@@ -95,16 +95,16 @@ export const storageService = {
      * @returns URL pública de descarga del archivo subido
      */
     uploadImage: async (file: File, path: string, options: UploadOptions = {}): Promise<string> => {
-        const { maxSizeMB = 10, compress = true, quality = 0.8, bucket = 'public' } = options;
+        const { maxSizeMB = 10, compress = true, quality = 0.95, bucket = 'media' } = options;
 
         let fileToUpload = file;
 
         // Comprimir imagen si es necesario
-        if (compress && file.type.startsWith('image/')) {
+        if (compress && file.type.startsWith('image/') && file.type !== 'image/gif') {
             try {
                 fileToUpload = await imageCompression(file, {
-                    maxSizeMB: 2,
-                    maxWidthOrHeight: 1920,
+                    maxSizeMB: 5,
+                    maxWidthOrHeight: 3840,
                     useWebWorker: true,
                     initialQuality: quality,
                 });
@@ -170,7 +170,7 @@ export const storageService = {
      * @param bucket - Nombre del bucket
      * @returns Lista de archivos
      */
-    listFiles: async (path: string, bucket = 'public') => {
+    listFiles: async (path: string, bucket = 'media') => {
         const { data, error } = await supabase.storage.from(bucket).list(path);
         if (error) throw error;
         return data;
@@ -182,7 +182,7 @@ export const storageService = {
      * @param paths - Array de paths a eliminar
      * @param bucket - Nombre del bucket
      */
-    deleteMultiple: async (paths: string[], bucket = 'public'): Promise<void> => {
+    deleteMultiple: async (paths: string[], bucket = 'media'): Promise<void> => {
         if (paths.length === 0) return;
         const { error } = await supabase.storage.from(bucket).remove(paths);
         if (error) {
@@ -197,7 +197,7 @@ export const storageService = {
      * @param bucket - Nombre del bucket
      * @returns URL pública
      */
-    getPublicUrl: (path: string, bucket = 'public'): string => {
+    getPublicUrl: (path: string, bucket = 'media'): string => {
         const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
         return publicUrl;
     },
@@ -210,7 +210,7 @@ export const storageService = {
      * @param expiresIn - Segundos hasta expiración (default: 3600)
      * @returns URL firmada
      */
-    getSignedUrl: async (path: string, bucket = 'public', expiresIn = 3600): Promise<string> => {
+    getSignedUrl: async (path: string, bucket = 'media', expiresIn = 3600): Promise<string> => {
         const { data, error } = await supabase.storage
             .from(bucket)
             .createSignedUrl(path, expiresIn);

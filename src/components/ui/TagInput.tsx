@@ -92,7 +92,7 @@ export const TagInput: React.FC<TagInputProps> = ({
 
                 {/* Suggestions Dropdown */}
                 {showSuggestions && inputValue && filteredSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1A1A1C] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1A1A1C] border border-slate-200 dark:border-white/10 rounded-xl z-50 max-h-48 overflow-y-auto">
                         {filteredSuggestions.map((suggestion) => (
                             <button
                                 key={suggestion}

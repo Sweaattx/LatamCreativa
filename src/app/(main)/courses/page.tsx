@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   GraduationCap, Search, Star, Clock, Users,
   PlayCircle, Sparkles, Award, BookOpen, Zap
 } from 'lucide-react';
+import { coursesService } from '@/services/supabase/coursesService';
 
 const MOCK_COURSES = [
   {
@@ -94,8 +96,38 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedLevel, setSelectedLevel] = useState('Todos');
+  const [courses, setCourses] = useState(MOCK_COURSES);
 
-  const filteredCourses = MOCK_COURSES.filter(course => {
+  const fetchCourses = useCallback(async () => {
+    try {
+      const data = await coursesService.getAll();
+      if (data.length > 0) {
+        setCourses(data.map(c => ({
+          id: c.id,
+          slug: c.slug,
+          title: c.title,
+          description: c.description || '',
+          instructor: c.instructor_name,
+          instructorAvatar: c.instructor_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.instructor_name)}&background=6366f1&color=fff`,
+          image: c.image || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop',
+          category: c.category,
+          level: c.level,
+          duration: c.duration || '',
+          lessons: c.lessons,
+          students: c.students,
+          rating: c.rating,
+          price: c.price,
+          originalPrice: c.original_price || c.price,
+          featured: c.featured,
+          tags: c.tags
+        })));
+      }
+    } catch { /* fallback to mock */ }
+  }, []);
+
+  useEffect(() => { fetchCourses(); }, [fetchCourses]);
+
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'Todos' || course.category === selectedCategory;
@@ -103,7 +135,7 @@ export default function CoursesPage() {
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
-  const featuredCourse = MOCK_COURSES.find(c => c.featured);
+  const featuredCourse = courses.find(c => c.featured);
 
   return (
     <div className="min-h-screen bg-dark-1">
@@ -165,7 +197,12 @@ export default function CoursesPage() {
               <Zap className="w-5 h-5 text-accent-400" />
               Curso Destacado
             </h2>
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-accent-500/10 to-dev-500/10 border border-dark-5/50">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-accent-500/10 to-dev-500/10 border border-dark-5/50"
+            >
               <div className="flex flex-col lg:flex-row">
                 <div className="lg:w-1/2 aspect-video lg:aspect-auto relative">
                   <Image
@@ -224,7 +261,7 @@ export default function CoursesPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -262,59 +299,65 @@ export default function CoursesPage() {
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredCourses.map((course) => (
-            <Link
+          {filteredCourses.map((course, idx) => (
+            <motion.div
               key={course.id}
-              href={`/courses/${course.slug}`}
-              className="group bg-dark-2/50 rounded-xl border border-dark-5 overflow-hidden hover:border-accent-500/30 transition-all hover:-translate-y-1"
+              initial={{ opacity: 0, y: 14, rotate: -0.5 }}
+              animate={{ opacity: 1, y: 0, rotate: 0 }}
+              transition={{ duration: 0.4, delay: idx * 0.07, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="aspect-video relative">
-                <Image
-                  src={course.image}
-                  alt={course.title}
-                  fill
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                />
-                <div className="absolute top-3 left-3">
-                  <span className="px-2 py-1 bg-dark-0/60 backdrop-blur-sm text-content-1 text-xs rounded-md">
-                    {course.level}
-                  </span>
-                </div>
-              </div>
-              <div className="p-4">
-                <span className="text-xs text-accent-500 font-medium">{course.category}</span>
-                <h3 className="text-content-1 font-medium mt-1 mb-2 line-clamp-2 group-hover:text-accent-400 transition-colors">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-content-2 line-clamp-2 mb-3">{course.description}</p>
-                <div className="flex items-center gap-2 mb-3">
+              <Link
+                href={`/courses/${course.slug}`}
+                className="group bg-dark-2/40 rounded-xl border border-dark-5 overflow-hidden hover:border-accent-500/30 transition-all hover:-translate-y-1 duration-300 hover:shadow-card block"
+              >
+                <div className="aspect-video relative">
                   <Image
-                    src={course.instructorAvatar}
-                    alt={course.instructor}
-                    width={24}
-                    height={24}
-                    className="rounded-full"
-                    unoptimized
+                    src={course.image}
+                    alt={course.title}
+                    fill
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
                   />
-                  <span className="text-sm text-content-2">{course.instructor}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-3 text-content-3">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {course.duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-amber-400" />
-                      {course.rating}
+                  <div className="absolute top-3 left-3">
+                    <span className="px-2 py-1 bg-dark-0/60 backdrop-blur-sm text-content-1 text-xs rounded-md">
+                      {course.level}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-content-1 font-medium">${course.price}</span>
+                </div>
+                <div className="p-4">
+                  <span className="text-xs text-accent-500 font-medium">{course.category}</span>
+                  <h3 className="text-content-1 font-medium mt-1 mb-2 line-clamp-2 group-hover:text-accent-400 transition-colors">
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-content-2 line-clamp-2 mb-3">{course.description}</p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Image
+                      src={course.instructorAvatar}
+                      alt={course.instructor}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                      unoptimized
+                    />
+                    <span className="text-sm text-content-2">{course.instructor}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-3 text-content-3">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {course.duration}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 text-amber-400" />
+                        {course.rating}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-content-1 font-medium">${course.price}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
 
@@ -325,6 +368,6 @@ export default function CoursesPage() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

@@ -51,11 +51,10 @@ export function CTASection({ isLoggedIn }: CTASectionProps) {
                         href={isLoggedIn ? '/portfolio' : '/register'}
                         className={`
                             inline-flex items-center gap-2 h-12 px-8 rounded-full text-base font-medium
-                            transition-all duration-300 ease-smooth
-                            hover:scale-[1.02] hover:shadow-lg
+                            transition-colors duration-200
                             ${isDevMode
-                                ? 'bg-dev-500 text-white hover:bg-dev-600 hover:shadow-glow-blue'
-                                : 'bg-accent-500 text-white hover:bg-accent-600 hover:shadow-glow-orange'
+                                ? 'bg-dev-500 text-white hover:bg-dev-600'
+                                : 'bg-accent-500 text-white hover:bg-accent-600'
                             }
                         `}
                     >

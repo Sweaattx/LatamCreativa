@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Briefcase, Search, Star, MapPin, DollarSign,
   Sparkles, Users, Shield, Zap
 } from 'lucide-react';
+import { freelancersService } from '@/services/supabase/freelancers';
 
 const MOCK_FREELANCERS = [
   {
@@ -71,6 +73,99 @@ const MOCK_FREELANCERS = [
   }
 ];
 
+const MOCK_FREELANCERS_EXTRA = [
+  {
+    id: '5',
+    name: 'Valentina Ríos',
+    username: 'valentinarios',
+    avatar: 'https://ui-avatars.com/api/?name=Valentina+Rios&background=06b6d4&color=fff',
+    title: 'Motion Graphics Artist',
+    location: 'Montevideo, Uruguay',
+    rating: 4.9,
+    reviews: 73,
+    hourlyRate: 50,
+    skills: ['After Effects', 'Cinema 4D', 'Premiere Pro', 'Lottie'],
+    available: true,
+    featured: false,
+    completedProjects: 58
+  },
+  {
+    id: '6',
+    name: 'Sebastián Mora',
+    username: 'sebastianmora',
+    avatar: 'https://ui-avatars.com/api/?name=Sebastian+Mora&background=ef4444&color=fff',
+    title: 'Game Artist & Concept Designer',
+    location: 'Quito, Ecuador',
+    rating: 4.6,
+    reviews: 41,
+    hourlyRate: 38,
+    skills: ['Photoshop', 'Blender', 'Concepto de Arte', 'Pixel Art'],
+    available: true,
+    featured: false,
+    completedProjects: 29
+  },
+  {
+    id: '7',
+    name: 'Camila Herrera',
+    username: 'camilaherrera',
+    avatar: 'https://ui-avatars.com/api/?name=Camila+Herrera&background=a855f7&color=fff',
+    title: 'Brand Designer & Strategist',
+    location: 'Caracas, Venezuela',
+    rating: 5.0,
+    reviews: 112,
+    hourlyRate: 55,
+    skills: ['Branding', 'Illustrator', 'Estrategia de Marca', 'Packaging'],
+    available: false,
+    featured: true,
+    completedProjects: 97
+  },
+  {
+    id: '8',
+    name: 'Andrés Velasco',
+    username: 'andresvelasco',
+    avatar: 'https://ui-avatars.com/api/?name=Andres+Velasco&background=14b8a6&color=fff',
+    title: 'Frontend Developer & Designer',
+    location: 'San José, Costa Rica',
+    rating: 4.8,
+    reviews: 66,
+    hourlyRate: 65,
+    skills: ['React', 'Figma', 'TailwindCSS', 'Framer Motion'],
+    available: true,
+    featured: false,
+    completedProjects: 51
+  },
+  {
+    id: '9',
+    name: 'Lucía Paredes',
+    username: 'luciaparedes',
+    avatar: 'https://ui-avatars.com/api/?name=Lucia+Paredes&background=f97316&color=fff',
+    title: 'Video Editor & Filmmaker',
+    location: 'La Paz, Bolivia',
+    rating: 4.7,
+    reviews: 53,
+    hourlyRate: 35,
+    skills: ['DaVinci Resolve', 'Premiere Pro', 'Storytelling', 'Color Grading'],
+    available: true,
+    featured: false,
+    completedProjects: 42
+  },
+  {
+    id: '10',
+    name: 'Mateo Guzmán',
+    username: 'mateoguzman',
+    avatar: 'https://ui-avatars.com/api/?name=Mateo+Guzman&background=eab308&color=fff',
+    title: 'Sound Designer & Compositor',
+    location: 'Medellín, Colombia',
+    rating: 4.9,
+    reviews: 87,
+    hourlyRate: 42,
+    skills: ['Pro Tools', 'Ableton', 'Sound FX', 'Composición Musical'],
+    available: false,
+    featured: false,
+    completedProjects: 76
+  }
+];
+
 const CATEGORIES = ['Todos', 'Diseño UI/UX', '3D & CGI', 'Ilustración', 'Desarrollo', 'Motion Graphics'];
 
 export default function FreelancePage() {
@@ -78,7 +173,34 @@ export default function FreelancePage() {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
-  const filteredFreelancers = MOCK_FREELANCERS.filter(freelancer => {
+  const [allFreelancers, setAllFreelancers] = useState([...MOCK_FREELANCERS, ...MOCK_FREELANCERS_EXTRA]);
+
+  const fetchFreelancers = useCallback(async () => {
+    try {
+      const data = await freelancersService.getAll();
+      if (data.length > 0) {
+        setAllFreelancers(data.map(f => ({
+          id: f.id,
+          name: f.name || f.title,
+          username: f.user_id,
+          avatar: f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.title)}&background=6366f1&color=fff`,
+          title: f.title,
+          location: f.location || '',
+          rating: f.rating,
+          reviews: f.reviews_count,
+          hourlyRate: f.hourly_rate || 0,
+          skills: f.skills,
+          available: f.available,
+          featured: f.featured,
+          completedProjects: f.completed_projects
+        })));
+      }
+    } catch { /* fallback to mock */ }
+  }, []);
+
+  useEffect(() => { fetchFreelancers(); }, [fetchFreelancers]);
+
+  const filteredFreelancers = allFreelancers.filter(freelancer => {
     const matchesSearch = freelancer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       freelancer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       freelancer.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -173,86 +295,92 @@ export default function FreelancePage() {
 
         {/* Grid de freelancers */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFreelancers.map((freelancer) => (
-            <Link
+          {filteredFreelancers.map((freelancer, idx) => (
+            <motion.div
               key={freelancer.id}
-              href={`/user/${freelancer.username}`}
-              className="group bg-dark-2/50 rounded-2xl border border-dark-5 p-6 hover:border-accent-500/30 transition-all hover:-translate-y-1"
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
             >
-              {freelancer.featured && (
-                <div className="flex items-center gap-1 text-accent-400 text-xs font-medium mb-4">
-                  <Zap className="w-3 h-3" />
-                  Destacado
-                </div>
-              )}
+              <Link
+                href={`/user/${freelancer.username}`}
+                className={`group block bg-dark-2/40 rounded-2xl border p-6 hover:bg-dark-2/60 transition-all hover:-translate-y-1 duration-300 ${freelancer.featured ? 'border-accent-500/25 ring-1 ring-accent-500/10' : 'border-dark-5 hover:border-accent-500/30'}`}
+              >
+                {freelancer.featured && (
+                  <div className="flex items-center gap-1 text-accent-400 text-xs font-medium mb-4">
+                    <Zap className="w-3 h-3" />
+                    Destacado
+                  </div>
+                )}
 
-              <div className="flex items-start gap-4 mb-4">
-                <div className="relative">
-                  <Image
-                    src={freelancer.avatar}
-                    alt={freelancer.name}
-                    width={64}
-                    height={64}
-                    className="rounded-xl"
-                    unoptimized
-                  />
-                  {freelancer.available && (
-                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-dark-1 rounded-full" />
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="relative">
+                    <Image
+                      src={freelancer.avatar}
+                      alt={freelancer.name}
+                      width={64}
+                      height={64}
+                      className="rounded-xl"
+                      unoptimized
+                    />
+                    {freelancer.available && (
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-dark-1 rounded-full" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-content-1 group-hover:text-accent-400 transition-colors truncate">
+                      {freelancer.name}
+                    </h3>
+                    <p className="text-sm text-content-2 truncate">{freelancer.title}</p>
+                    <p className="text-xs text-content-3 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3 h-3" />
+                      {freelancer.location}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mb-4 text-sm">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    <Star className="w-4 h-4 fill-current" />
+                    <span className="font-medium">{freelancer.rating}</span>
+                    <span className="text-content-3">({freelancer.reviews})</span>
+                  </div>
+                  <div className="text-content-2">
+                    {freelancer.completedProjects} proyectos
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {freelancer.skills.slice(0, 3).map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2 py-1 bg-dark-3 text-content-2 text-xs rounded-md"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                  {freelancer.skills.length > 3 && (
+                    <span className="px-2 py-1 bg-dark-3 text-content-3 text-xs rounded-md">
+                      +{freelancer.skills.length - 3}
+                    </span>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-content-1 group-hover:text-accent-400 transition-colors truncate">
-                    {freelancer.name}
-                  </h3>
-                  <p className="text-sm text-content-2 truncate">{freelancer.title}</p>
-                  <p className="text-xs text-content-3 flex items-center gap-1 mt-1">
-                    <MapPin className="w-3 h-3" />
-                    {freelancer.location}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-4 mb-4 text-sm">
-                <div className="flex items-center gap-1 text-amber-400">
-                  <Star className="w-4 h-4 fill-current" />
-                  <span className="font-medium">{freelancer.rating}</span>
-                  <span className="text-content-3">({freelancer.reviews})</span>
-                </div>
-                <div className="text-content-2">
-                  {freelancer.completedProjects} proyectos
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {freelancer.skills.slice(0, 3).map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2 py-1 bg-dark-3 text-content-2 text-xs rounded-md"
-                  >
-                    {skill}
+                <div className="flex items-center justify-between pt-4 border-t border-dark-5">
+                  <div className="flex items-center gap-1 text-content-1">
+                    <DollarSign className="w-4 h-4 text-green-400" />
+                    <span className="font-medium">${freelancer.hourlyRate}</span>
+                    <span className="text-content-3 text-sm">/hora</span>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${freelancer.available
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-dark-3 text-content-3'
+                    }`}>
+                    {freelancer.available ? 'Disponible' : 'Ocupado'}
                   </span>
-                ))}
-                {freelancer.skills.length > 3 && (
-                  <span className="px-2 py-1 bg-dark-3 text-content-3 text-xs rounded-md">
-                    +{freelancer.skills.length - 3}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-dark-5">
-                <div className="flex items-center gap-1 text-content-1">
-                  <DollarSign className="w-4 h-4 text-green-400" />
-                  <span className="font-medium">${freelancer.hourlyRate}</span>
-                  <span className="text-content-3 text-sm">/hora</span>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${freelancer.available
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-dark-3 text-content-3'
-                  }`}>
-                  {freelancer.available ? 'Disponible' : 'Ocupado'}
-                </span>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
 

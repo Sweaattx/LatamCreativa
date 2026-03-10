@@ -8,6 +8,7 @@
  * Incluye subida y eliminación de imágenes.
  */
 import React, { useRef, useCallback, useState } from 'react';
+import { sanitizeHtml } from '@/utils/sanitizeHtml';
 import '../../styles/tiptap.css';
 import { useEditor, EditorContent, NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -80,7 +81,7 @@ const ImageWithDelete: React.FC<NodeViewProps> = ({ node, deleteNode, selected }
                 <button
                     type="button"
                     onClick={deleteNode}
-                    className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-all"
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
                     title="Eliminar imagen"
                 >
                     <X className="w-4 h-4" />
@@ -424,6 +425,14 @@ const MarkdownEditor: React.FC<Omit<ForumEditorProps, 'category'>> = ({
     const renderPreview = (text: string) => {
         if (!text.trim()) return '<span class="text-gray-600 italic">Vista previa...</span>';
 
+        // Validate that a URL uses a safe protocol (prevent javascript: injection)
+        const sanitizeUrl = (url: string): string => {
+            const decoded = url.trim();
+            if (/^(https?:\/\/|mailto:)/i.test(decoded)) return decoded;
+            if (/^[a-zA-Z0-9]/.test(decoded) && !decoded.includes(':')) return decoded; // relative paths
+            return ''; // block javascript:, data:, vbscript:, etc.
+        };
+
         return text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -432,8 +441,14 @@ const MarkdownEditor: React.FC<Omit<ForumEditorProps, 'category'>> = ({
             .replace(/`([^`]+)`/g, '<code class="bg-black/40 px-1 rounded text-amber-400 text-sm">$1</code>')
             .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
             .replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-amber-400 underline">$1</a>')
-            .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full rounded my-1 max-h-48" />')
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt: string, src: string) => {
+                const safeSrc = sanitizeUrl(src);
+                return safeSrc ? `<img src="${safeSrc}" alt="${alt}" class="max-w-full rounded my-1 max-h-48" />` : `[${alt}]`;
+            })
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
+                const safeHref = sanitizeUrl(href);
+                return safeHref ? `<a href="${safeHref}" class="text-amber-400 underline" rel="noopener noreferrer">${label}</a>` : label;
+            })
             .replace(/^&gt; (.+)$/gm, '<span class="border-l-2 border-amber-500 pl-2 text-gray-400 italic block">$1</span>')
             .replace(/^- (.+)$/gm, '<span class="ml-3 block">• $1</span>')
             .replace(/\n/g, '<br />');
@@ -495,7 +510,7 @@ const MarkdownEditor: React.FC<Omit<ForumEditorProps, 'category'>> = ({
                 <div
                     className="p-4 text-gray-300 text-sm overflow-auto bg-black/10 hidden md:block"
                     style={{ minHeight }}
-                    dangerouslySetInnerHTML={{ __html: renderPreview(value) }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderPreview(value)) }}
                 />
             </div>
 

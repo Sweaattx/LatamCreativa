@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import {
   Building2, Search, MapPin, Clock, DollarSign, Briefcase,
   Globe, Users, Sparkles, Bookmark, Check
 } from 'lucide-react';
+import { jobsService, type Job } from '@/services/supabase/jobs';
 
 const MOCK_JOBS = [
   {
@@ -23,52 +25,28 @@ const MOCK_JOBS = [
     featured: true,
     applicants: 45
   },
-  {
-    id: '2',
-    title: 'UI/UX Designer',
-    company: 'TechLatam',
-    companyLogo: 'https://ui-avatars.com/api/?name=TechLatam&background=10b981&color=fff',
-    location: 'Buenos Aires, Argentina',
-    type: 'Tiempo completo',
-    remote: true,
-    salary: { min: 2500, max: 4000, currency: 'USD' },
-    skills: ['Figma', 'Diseño UI', 'Prototipado', 'Investigación UX'],
-    description: 'Únete a nuestro equipo de producto para diseñar experiencias digitales increíbles.',
-    postedAt: '2024-01-27',
-    featured: false,
-    applicants: 78
-  },
-  {
-    id: '3',
-    title: 'Motion Graphics Designer',
-    company: 'Creative Agency',
-    companyLogo: 'https://ui-avatars.com/api/?name=Creative+Agency&background=ec4899&color=fff',
-    location: 'Bogotá, Colombia',
-    type: 'Freelance',
-    remote: true,
-    salary: { min: 30, max: 50, currency: 'USD', hourly: true },
-    skills: ['After Effects', 'Cinema 4D', 'Premiere Pro'],
-    description: 'Buscamos motion designer freelance para proyectos de publicidad y branding.',
-    postedAt: '2024-01-26',
-    featured: true,
-    applicants: 32
-  },
-  {
-    id: '4',
-    title: 'Game Developer - Unity',
-    company: 'IndieGames Latam',
-    companyLogo: 'https://ui-avatars.com/api/?name=IndieGames&background=f59e0b&color=fff',
-    location: 'Santiago, Chile',
-    type: 'Tiempo completo',
-    remote: false,
-    salary: { min: 2000, max: 3500, currency: 'USD' },
-    skills: ['Unity', 'C#', 'Diseño de Juegos', 'Multijugador'],
-    description: 'Desarrollador de juegos con experiencia en Unity para proyecto indie.',
-    postedAt: '2024-01-25',
-    featured: false,
-    applicants: 56
-  }
 ];
+
+interface SalaryInfo { min: number; max: number; currency: string; hourly?: boolean; }
+interface LocalJob { id: string; title: string; company: string; companyLogo: string; location: string; type: string; remote: boolean; salary: SalaryInfo; skills: string[]; description: string; postedAt: string; featured: boolean; applicants: number; }
+
+function mapDbToLocal(job: Job): LocalJob {
+  return {
+    id: job.id,
+    title: job.title,
+    company: job.company,
+    companyLogo: job.company_logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&background=6366f1&color=fff`,
+    location: job.location,
+    type: job.type,
+    remote: job.remote,
+    salary: { min: job.salary_min || 0, max: job.salary_max || 0, currency: job.salary_currency, ...(job.salary_hourly ? { hourly: true } : {}) },
+    skills: job.skills || [],
+    description: job.description || '',
+    postedAt: job.created_at,
+    featured: job.featured,
+    applicants: job.applicants
+  };
+}
 
 const JOB_TYPES = ['Todos', 'Tiempo completo', 'Medio tiempo', 'Freelance', 'Contrato'];
 
@@ -77,8 +55,23 @@ export default function JobsPage() {
   const [selectedType, setSelectedType] = useState('Todos');
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const [jobs, setJobs] = useState<LocalJob[]>(MOCK_JOBS);
+  const [loading, setLoading] = useState(true);
 
-  const filteredJobs = MOCK_JOBS.filter(job => {
+  const fetchJobs = useCallback(async () => {
+    try {
+      const data = await jobsService.getAll();
+      if (data.length > 0) setJobs(data.map(mapDbToLocal));
+    } catch {
+      // fallback to MOCK_JOBS
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+
+  const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -86,6 +79,8 @@ export default function JobsPage() {
     const matchesRemote = !remoteOnly || job.remote;
     return matchesSearch && matchesType && matchesRemote;
   });
+
+
 
   const toggleSave = (jobId: string) => {
     setSavedJobs(prev => {
@@ -104,7 +99,7 @@ export default function JobsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatSalary = (salary: typeof MOCK_JOBS[0]['salary']) => {
+  const formatSalary = (salary: SalaryInfo) => {
     if (salary.hourly) {
       return `$${salary.min}-${salary.max}/hora`;
     }
@@ -125,7 +120,7 @@ export default function JobsPage() {
     <div className="min-h-screen bg-dark-1">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-green-500/20 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium shadow-xl backdrop-blur-sm">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-green-500/20 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Check className="w-4 h-4" />
             {toast}
@@ -217,10 +212,13 @@ export default function JobsPage() {
 
         {/* Lista de trabajos */}
         <div className="space-y-4">
-          {filteredJobs.map((job) => (
-            <div
+          {filteredJobs.map((job, idx) => (
+            <motion.div
               key={job.id}
-              className={`bg-dark-2/50 rounded-2xl border p-6 hover:border-accent-500/30 transition-all ${job.featured ? 'border-accent-500/30' : 'border-dark-5'
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: idx * 0.06, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className={`bg-dark-2/50 rounded-2xl border p-6 hover:border-accent-500/30 transition-all hover:bg-dark-2/70 ${job.featured ? 'border-accent-500/30 bg-gradient-to-r from-accent-500/[0.03] to-transparent' : 'border-dark-5'
                 }`}
             >
               {job.featured && (
@@ -309,7 +307,7 @@ export default function JobsPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 

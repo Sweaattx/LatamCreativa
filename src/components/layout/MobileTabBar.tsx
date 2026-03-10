@@ -26,19 +26,24 @@ export const MobileTabBar: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-dark-0/95 backdrop-blur-xl border-t border-dark-5/30 safe-area-pb">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-dark-0/95 backdrop-blur-xl border-t border-dark-5/30"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const path = item.id === 'profile' ? getProfilePath() : item.path;
           const isActive = item.id === 'home'
             ? pathname === '/'
-            : pathname?.startsWith(item.path);
+            : item.id === 'profile'
+              ? pathname?.startsWith('/user') || pathname === '/login' || pathname === '/settings'
+              : pathname?.startsWith(item.path);
 
           return (
             <Link
               key={item.id}
               href={path}
-              className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${isActive ? 'text-accent-500' : 'text-content-3'
+              className={`flex flex-col items-center justify-center flex-1 min-w-[44px] min-h-[44px] gap-1 transition-colors ${isActive ? 'text-accent-500' : 'text-content-3'
                 }`}
             >
               <div className="relative">

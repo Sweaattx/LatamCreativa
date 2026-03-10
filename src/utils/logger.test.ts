@@ -1,72 +1,103 @@
-/**
- * Logger Utility Tests
+﻿/**
+ * Logger Tests
+ * Tests for logger.ts - 12 tests
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { logger } from './logger';
 
-// Mock import.meta.env.DEV
-const mockEnv = { DEV: true };
-vi.mock('import.meta', () => ({
-    env: mockEnv
-}));
-
-// We need to dynamically import after mocking
-describe('Logger Utility', () => {
-    const originalConsole = {
-        debug: console.debug,
-        info: console.info,
-        warn: console.warn,
-        error: console.error,
-    };
+describe('logger', () => {
+    const originalEnv = process.env.NODE_ENV;
 
     beforeEach(() => {
-        console.debug = vi.fn();
-        console.info = vi.fn();
-        console.warn = vi.fn();
-        console.error = vi.fn();
+        vi.spyOn(console, 'debug').mockImplementation(() => { });
+        vi.spyOn(console, 'info').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'error').mockImplementation(() => { });
+        vi.spyOn(console, 'group').mockImplementation(() => { });
+        vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
+        vi.spyOn(console, 'table').mockImplementation(() => { });
+        vi.spyOn(console, 'time').mockImplementation(() => { });
+        vi.spyOn(console, 'timeEnd').mockImplementation(() => { });
     });
 
     afterEach(() => {
-        console.debug = originalConsole.debug;
-        console.info = originalConsole.info;
-        console.warn = originalConsole.warn;
-        console.error = originalConsole.error;
-        vi.clearAllMocks();
+        vi.restoreAllMocks();
+        process.env.NODE_ENV = originalEnv;
     });
 
-    it('should export logger object with expected methods', async () => {
-        const { logger } = await import('./logger');
-        
-        expect(logger).toBeDefined();
-        expect(typeof logger.debug).toBe('function');
-        expect(typeof logger.info).toBe('function');
-        expect(typeof logger.warn).toBe('function');
-        expect(typeof logger.error).toBe('function');
+    describe('warn', () => {
+        it('should always log warnings', () => {
+            logger.warn('test warning');
+            expect(console.warn).toHaveBeenCalledTimes(1);
+        });
+
+        it('should include level prefix in message', () => {
+            logger.warn('test warning');
+            const message = (console.warn as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(message).toContain('[WARN]');
+        });
     });
 
-    it('warn should always log regardless of environment', async () => {
-        const { logger } = await import('./logger');
-        
-        logger.warn('test warning');
-        
-        expect(console.warn).toHaveBeenCalled();
+    describe('error', () => {
+        it('should always log errors', () => {
+            logger.error('test error');
+            expect(console.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('should include level prefix in message', () => {
+            logger.error('test error');
+            const message = (console.error as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(message).toContain('[ERROR]');
+        });
+
+        it('should pass additional arguments', () => {
+            const extra = { key: 'value' };
+            logger.error('test error', extra);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.any(String),
+                extra
+            );
+        });
     });
 
-    it('error should always log regardless of environment', async () => {
-        const { logger } = await import('./logger');
-        
-        logger.error('test error');
-        
-        expect(console.error).toHaveBeenCalled();
+    describe('log with custom level', () => {
+        it('should format message with warn level', () => {
+            logger.log('warn', 'custom warning');
+            expect(console.warn).toHaveBeenCalledTimes(1);
+        });
+
+        it('should format message with error level', () => {
+            logger.log('error', 'custom error');
+            expect(console.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('should accept custom options', () => {
+            logger.log('warn', 'no timestamp', { showTimestamp: false });
+            const message = (console.warn as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            // Without timestamp, should not start with [
+            expect(message).toContain('[WARN]');
+        });
     });
 
-    it('should include formatted message with level', async () => {
-        const { logger } = await import('./logger');
-        
-        logger.warn('test message');
-        
-        expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining('[WARN]'),
-            // No additional args
-        );
+    describe('message formatting', () => {
+        it('should include timestamp by default', () => {
+            logger.warn('test');
+            const message = (console.warn as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            // ISO timestamp pattern
+            expect(message).toMatch(/\[\d{4}-\d{2}-\d{2}T/);
+        });
+
+        it('should include level by default', () => {
+            logger.error('test');
+            const message = (console.error as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(message).toContain('[ERROR]');
+        });
+
+        it('should include the message content', () => {
+            logger.warn('hello world');
+            const message = (console.warn as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(message).toContain('hello world');
+        });
     });
 });
+

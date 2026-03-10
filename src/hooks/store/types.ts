@@ -12,6 +12,13 @@ export type { CreateMode, ItemType } from '../../types';
 export type ContentMode = 'creative' | 'dev';
 export type ToastType = 'success' | 'error' | 'info';
 
+export interface SavedItem {
+    id: string;
+    title: string;
+    image: string;
+    slug: string;
+}
+
 export interface ToastState {
     message: string;
     type: ToastType;
@@ -54,6 +61,7 @@ export interface AuthSlice {
     user: User | null;
     cartItems: CartItem[];
     likedItems: string[];
+    savedItems: SavedItem[];
     createdItems: PortfolioItem[];
     notifications: Notification[];
     collections: CollectionItem[];
@@ -74,6 +82,7 @@ export interface AuthSlice {
     removeFromCart: (itemId: string) => void;
     clearCart: () => void;
     toggleLike: (itemId: string) => void;
+    toggleSave: (item: SavedItem) => void;
     addCreatedItem: (item: PortfolioItem) => void;
     addBlogPost: (post: ArticleItem) => void;
     markNotificationRead: (id: string | number) => void;
@@ -128,12 +137,13 @@ export const INITIAL_UI_STATE: Pick<UISlice,
 };
 
 export const INITIAL_AUTH_STATE: Pick<AuthSlice,
-    'user' | 'cartItems' | 'likedItems' | 'createdItems' | 'notifications' |
+    'user' | 'cartItems' | 'likedItems' | 'savedItems' | 'createdItems' | 'notifications' |
     'collections' | 'blogPosts' | 'isLoadingAuth' | 'unsubscribeNotifications'
 > = {
     user: null,
     cartItems: [],
     likedItems: [],
+    savedItems: [],
     createdItems: [],
     notifications: [],
     collections: [],

@@ -17,7 +17,7 @@ export function HeroSection({ isLoggedIn }: HeroSectionProps) {
     const isDevMode = state.contentMode === 'dev';
 
     return (
-        <section className="relative h-[calc(100vh-56px)] flex items-center overflow-hidden bg-dark-0">
+        <section className="relative flex items-center overflow-hidden bg-dark-0" style={{ height: 'calc(100dvh - 56px)', minHeight: '500px' }}>
             {/* Subtle gradient overlay */}
             <div
                 className="absolute inset-0 pointer-events-none"
@@ -110,11 +110,10 @@ export function HeroSection({ isLoggedIn }: HeroSectionProps) {
                             href={isLoggedIn ? "/dashboard" : "/register"}
                             className={`
                                 h-12 px-8 rounded-full font-medium text-base flex items-center justify-center gap-2
-                                transition-all duration-300 ease-smooth pointer-events-auto
-                                hover:scale-[1.02] hover:shadow-lg
+                                transition-colors duration-200 pointer-events-auto
                                 ${isDevMode
-                                    ? 'bg-dev-500 text-white hover:bg-dev-600 hover:shadow-dev-glow'
-                                    : 'bg-accent-500 text-white hover:bg-accent-600 hover:shadow-glow-orange'
+                                    ? 'bg-dev-500 text-white hover:bg-dev-600'
+                                    : 'bg-accent-500 text-white hover:bg-accent-600'
                                 }
                             `}
                         >

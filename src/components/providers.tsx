@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect, type ReactNode } from 'react';
 import { AuthListener } from './auth/AuthListener';
 import { appStoreApi } from '@/hooks/useAppStore';
+import { initAntiDebug } from '@/utils/antiDebug';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -53,7 +54,15 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <AuthListener />
       <ContentModeHydrator />
+      <AntiDebugInit />
       {children}
     </QueryClientProvider>
   );
+}
+
+function AntiDebugInit() {
+  useEffect(() => {
+    initAntiDebug();
+  }, []);
+  return null;
 }

@@ -27,7 +27,7 @@ export const ServiceComingSoon: React.FC<ServiceComingSoonProps> = ({
             gradient: 'from-accent-500 to-orange-600',
             glow: 'bg-accent-500/20',
             button: 'from-accent-500 to-accent-600',
-            shadow: 'shadow-glow-orange',
+            shadow: '',
             icon: 'text-accent-500',
             check: 'text-accent-500'
         },
@@ -35,7 +35,7 @@ export const ServiceComingSoon: React.FC<ServiceComingSoonProps> = ({
             gradient: 'from-dev-400 to-blue-500',
             glow: 'bg-dev-500/20',
             button: 'from-dev-500 to-dev-600',
-            shadow: 'shadow-glow-blue',
+            shadow: '',
             icon: 'text-dev-400',
             check: 'text-dev-500'
         },
@@ -69,12 +69,12 @@ export const ServiceComingSoon: React.FC<ServiceComingSoonProps> = ({
                 <div className="grid md:grid-cols-2 gap-8 items-center">
 
                     {/* Left: Service Info */}
-                    <div className="p-8 md:p-10 rounded-2xl border border-dark-5/50 shadow-2xl bg-dark-2/80 backdrop-blur-xl">
+                    <div className="p-8 md:p-10 rounded-2xl border border-dark-5/50 bg-dark-2/80 backdrop-blur-xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dark-3 border border-dark-5/50 text-accent-500 text-xs font-bold uppercase tracking-widest mb-6">
                             <Timer className="h-3 w-3" /> Próximamente
                         </div>
 
-                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${colors.button} flex items-center justify-center mb-6 ${colors.shadow} shadow-lg`}>
+                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${colors.button} flex items-center justify-center mb-6`}>
                             <Icon className="w-8 h-8 text-white" />
                         </div>
 
@@ -109,7 +109,7 @@ export const ServiceComingSoon: React.FC<ServiceComingSoonProps> = ({
                     </div>
 
                     {/* Right: Newsletter Signup */}
-                    <div className="p-8 rounded-2xl border border-dark-5/50 shadow-2xl bg-dark-2/60 backdrop-blur-xl text-center">
+                    <div className="p-8 rounded-2xl border border-dark-5/50 bg-dark-2/60 backdrop-blur-xl text-center">
                         <Rocket className={`w-12 h-12 ${colors.icon} mx-auto mb-6`} />
                         <h2 className="text-2xl font-medium text-content-1 mb-3">
                             Sé el primero en probarlo
@@ -127,7 +127,7 @@ export const ServiceComingSoon: React.FC<ServiceComingSoonProps> = ({
                                     className="w-full bg-dark-3 border border-dark-5 rounded-xl py-3 pl-12 pr-4 text-content-1 placeholder-content-3 focus:outline-none focus:border-accent-500/50 focus:bg-dark-2 transition-all"
                                 />
                             </div>
-                            <button className={`w-full px-8 py-3 bg-gradient-to-r ${colors.button} text-white font-medium rounded-xl hover:shadow-lg ${colors.shadow} hover:scale-[1.02] transition-all flex items-center justify-center gap-2`}>
+                            <button className={`w-full px-8 py-3 bg-gradient-to-r ${colors.button} text-white font-medium rounded-xl hover:opacity-90 transition-colors flex items-center justify-center gap-2`}>
                                 <Rocket className="h-4 w-4" />
                                 Notificarme
                             </button>

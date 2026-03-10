@@ -34,7 +34,7 @@ export function Footer() {
   return (
     <footer className="bg-dark-0 border-t border-dark-5/30">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="text-md font-semibold">
@@ -115,12 +115,12 @@ export function Footer() {
           <p className="text-xs text-content-3">
             © {new Date().getFullYear()} Latam<span style={{ color: isDevMode ? '#60A5FA' : '#F59E0B', position: 'relative', top: '1px' }}>Creativa</span>. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
             <a
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-content-3 hover:text-content-2 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-content-3 hover:text-content-2 transition-colors"
               aria-label="Twitter"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ export function Footer() {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-content-3 hover:text-content-2 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-content-3 hover:text-content-2 transition-colors"
               aria-label="Instagram"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

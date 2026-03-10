@@ -2,6 +2,7 @@
  * Prefetch Configuration
  * 
  * Configuration for strategic link prefetching to improve navigation performance.
+ * Uses native browser prefetch APIs (compatible with Next.js App Router).
  * 
  * @module lib/prefetch
  */
@@ -31,28 +32,32 @@ export const PREFETCH_ROUTES = {
 } as const;
 
 /**
- * Prefetch a route programmatically
- * Uses Next.js router prefetch
+ * Prefetch a route using the native browser prefetch API.
+ * Appends a <link rel="prefetch"> tag to the document head.
  */
-export async function prefetchRoute(route: string): Promise<void> {
+export function prefetchRoute(route: string): void {
     if (typeof window === 'undefined') return;
 
-    // Dynamic import to avoid SSR issues
-    const { default: Router } = await import('next/router');
+    // Avoid duplicate prefetch links
+    const existing = document.querySelector(`link[rel="prefetch"][href="${route}"]`);
+    if (existing) return;
 
     try {
-        await Router.prefetch(route);
-    } catch (error) {
-        // Silently fail - prefetch is an optimization
-        console.debug(`Prefetch failed for ${route}`);
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = route;
+        link.as = 'document';
+        document.head.appendChild(link);
+    } catch {
+        // Silently fail — prefetch is an optimization
     }
 }
 
 /**
  * Prefetch multiple routes
  */
-export async function prefetchRoutes(routes: string[]): Promise<void> {
-    await Promise.all(routes.map(prefetchRoute));
+export function prefetchRoutes(routes: string[]): void {
+    routes.forEach(prefetchRoute);
 }
 
 /**
@@ -83,3 +88,4 @@ export function createPrefetchObserver(
         }
     );
 }
+

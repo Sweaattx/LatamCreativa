@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { PrimarySidebar, SecondarySidebar, MobileSidebar } from './Navigation';
+import Link from 'next/link';
+import { PrimarySidebar, MobileSidebar } from './Navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileTabBar } from './MobileTabBar';
@@ -62,15 +63,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     else router.push(`/${moduleId}`);
   };
 
-  // Modules that should hide the secondary sidebar
-  const hideSidebar = isLearningMode ||
-    ['landing', 'home', 'settings', 'pro', 'search', 'collections', 'cart', 'people', 'community', 'events', 'profile'].includes(state.activeModule) ||
-    state.activeModule.startsWith('earnings') ||
-    state.activeModule.startsWith('info-') ||
-    !!state.viewingAuthor;
+
+  const isDevMode = state.contentMode === 'dev';
 
   return (
-    <div className="flex w-full h-screen overflow-hidden bg-dark-1 text-content-1 font-sans antialiased">
+    <div className="flex w-full h-screen max-w-[100vw] overflow-x-hidden bg-dark-1 text-content-1 font-sans antialiased">
       {/* Skip Link for Accessibility */}
       <a
         href="#main-content"
@@ -79,21 +76,36 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         Saltar al contenido principal
       </a>
 
-      {/* Primary Sidebar */}
+      {/* Fixed Logo — top-left corner */}
+      <Link
+        href="/"
+        className="fixed top-0 left-3 z-50 p-2"
+        aria-label="Inicio"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 43.02 61.5"
+          className="w-6 h-8 hover:scale-110 transition-transform duration-200"
+          aria-hidden="true"
+        >
+          <path
+            d="M1.51,50.24c-.36.2-.78.16-1.02.02s-.49-.51-.49-.92V10.19c0-.46.19-.83.56-1.03L16.45.08c.25-.15.76-.08.96.05s.45.5.45.89l.06,39.15c0,.49-.21.87-.61,1.1L1.51,50.24Z"
+            fill="#fff"
+          />
+          <path
+            d="M13.42,61.32c-.51.28-.93.2-1.32-.04L.9,54.36c-.23-.14-.44-.55-.44-.77,0-.3.19-.61.47-.87l28.57-16.33c.44-.25.87-.25,1.3,0l11.73,6.97c.27.16.49.57.49.81,0,.35-.2.65-.53.9l-29.08,16.24Z"
+            fill={isDevMode ? '#60A5FA' : '#F59E0B'}
+          />
+        </svg>
+      </Link>
+
+      {/* Primary Sidebar (includes hover flyout for Explorar) */}
       {!isLearningMode && (
         <PrimarySidebar
           activeModule={state.activeModule}
           onModuleSelect={handleModuleNavigation}
           contentMode={state.contentMode}
           onToggleContentMode={actions.toggleContentMode}
-        />
-      )}
-
-      {/* Secondary Sidebar */}
-      {!hideSidebar && (
-        <SecondarySidebar
-          activeModule={state.activeModule}
-          contentMode={state.contentMode}
         />
       )}
 
@@ -122,9 +134,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <div className="relative flex-1 overflow-hidden">
           <div
             ref={mainScrollRef}
-            className={`h-full overflow-y-auto pb-20 md:pb-0`}
+            data-scroll-container=""
+            className={`h-full overflow-y-auto overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0`}
             style={{
-              scrollBehavior: 'smooth',
+              scrollBehavior: 'auto',
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
               scrollbarWidth: 'none',
@@ -186,9 +199,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Toast */}
       {state.toast && (
-        <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[110]">
+        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] md:bottom-8 left-1/2 -translate-x-1/2 z-[110]">
           <div className={`
-            px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 text-sm font-medium backdrop-blur-md border border-white/[0.06]
+            px-5 py-3 rounded-full flex items-center gap-3 text-sm font-medium backdrop-blur-md border border-white/[0.06]
             ${state.toast.type === 'success' ? 'bg-[#161616] text-white' : ''}
             ${state.toast.type === 'error' ? 'bg-red-950/90 text-red-200' : ''}
             ${state.toast.type === 'info' ? 'bg-[#161616] text-white' : ''}

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
 import { ArticleDetail } from '@/components/blog/ArticleDetail';
+import { ArticleFromStore } from '@/components/blog/ArticleFromStore';
 import type { Metadata } from 'next';
 
 interface ArticlePageProps {
@@ -96,7 +96,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const data = await getArticle(slug);
 
   if (!data) {
-    notFound();
+    // Article not in Supabase — try local store
+    return <ArticleFromStore slug={slug} />;
   }
 
   return (

@@ -36,8 +36,8 @@ export const usersProfile = {
 
             return data ? mapDbUserToUser(data) as unknown as User : null;
         } catch (error) {
-            console.error("Error fetching user profile:", error);
-            throw error;
+            console.warn("Error fetching user profile:", error instanceof Error ? error.message : 'Unknown error');
+            return null;
         }
     },
 
@@ -60,9 +60,12 @@ export const usersProfile = {
                 .update(dbData as never)
                 .eq('id', userId);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase update error details:', error.message, error.code, error.details);
+                throw new Error(error.message || 'Error al actualizar perfil');
+            }
         } catch (error) {
-            console.error("Error updating user profile:", error);
+            console.error("Error updating user profile:", error instanceof Error ? error.message : error);
             throw error;
         }
     },
@@ -115,7 +118,7 @@ export const usersProfile = {
                 first_name: additionalData.firstName || user.user_metadata?.firstName || '',
                 last_name: additionalData.lastName || user.user_metadata?.lastName || '',
                 avatar: avatarUrl,
-                role: 'Creative Member',
+                role: 'Miembro Creativo',
                 location: 'Latam',
                 is_profile_complete: false,
                 is_admin: false,
@@ -135,8 +138,8 @@ export const usersProfile = {
 
             return insertedUser ? mapDbUserToUser(insertedUser) as unknown as User : null;
         } catch (error) {
-            console.error("Error initializing user profile:", error);
-            throw error;
+            console.warn("Error initializing user profile:", error instanceof Error ? error.message : 'Unknown error');
+            return null;
         }
     },
 
@@ -174,15 +177,20 @@ export const usersProfile = {
      * @param username - Username a verificar
      * @returns true si está disponible, false si ya existe
      */
-    checkUsernameAvailability: async (username: string): Promise<boolean> => {
+    checkUsernameAvailability: async (username: string, excludeUserId?: string): Promise<boolean> => {
         try {
             if (!username) return false;
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('users')
                 .select('id')
-                .eq('username', username)
-                .maybeSingle();
+                .eq('username', username);
+
+            if (excludeUserId) {
+                query = query.neq('id', excludeUserId);
+            }
+
+            const { data, error } = await query.maybeSingle();
 
             if (error) throw error;
             return data === null;

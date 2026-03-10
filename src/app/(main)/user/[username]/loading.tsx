@@ -10,7 +10,7 @@ export default function UserProfileLoading() {
                 {/* Avatar + name */}
                 <div className="relative -mt-16 sm:-mt-20 mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-                        <SkeletonBox className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl ring-4 ring-dark-950" />
+                        <SkeletonBox className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl" />
                         <div className="flex-1 sm:pb-2 space-y-2">
                             <SkeletonBox className="h-8 w-48" />
                             <SkeletonBox className="h-4 w-24" />

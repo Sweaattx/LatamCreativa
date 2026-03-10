@@ -23,6 +23,14 @@ export function ProfileTab({ user, saving, setSaving, showToast }: ProfileTabPro
         setSaving(true);
         try {
             const supabase = getSupabaseClient();
+
+            // Check if user is authenticated first
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                showToast('Inicia sesión para guardar cambios', 'error');
+                return;
+            }
+
             const updates: Record<string, unknown> = {
                 name: name.trim(),
                 bio: bio.trim() || null,
@@ -35,11 +43,19 @@ export function ProfileTab({ user, saving, setSaving, showToast }: ProfileTabPro
                 .update(updates as never)
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (error) {
+                // RLS or permission error — show specific message
+                const msg = error.message || error.code || 'Permiso denegado';
+                console.warn('Supabase update error:', msg);
+                showToast(`No se pudo guardar: ${msg}`, 'error');
+                return;
+            }
+
             showToast('Cambios guardados correctamente');
-        } catch (err) {
-            console.error('Error saving profile:', err);
-            showToast('Error al guardar los cambios', 'error');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Error desconocido';
+            console.error('Error saving profile:', message);
+            showToast(`Error al guardar: ${message}`, 'error');
         } finally {
             setSaving(false);
         }

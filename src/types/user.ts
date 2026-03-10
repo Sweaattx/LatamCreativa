@@ -33,6 +33,10 @@ export interface SocialLinks {
     github?: string;
     behance?: string;
     dribbble?: string;
+    youtube?: string;
+    pinterest?: string;
+    tiktok?: string;
+    vimeo?: string;
 }
 
 export interface NotificationPreferences {
@@ -55,6 +59,7 @@ export interface User {
     photoURL?: string;
     avatar?: string;
     coverImage?: string;
+    coverPosition?: number | string;
     role?: string;
     location?: string;
     country?: string;

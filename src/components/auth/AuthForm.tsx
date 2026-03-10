@@ -8,6 +8,8 @@ import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/hooks/useAppStore';
 import { usersProfile } from '@/services/supabase/users/profile';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 interface AuthFormProps {
   mode: 'login' | 'register';
 }
@@ -28,8 +30,7 @@ const getSupabaseAuthError = (error: unknown): string => {
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const supabase = getSupabaseClient();
-  const { state, actions } = useAppStore();
-  const isDevMode = state.contentMode === 'dev';
+  const { actions } = useAppStore();
 
   const [isLogin, setIsLogin] = useState(mode === 'login');
   const [isLoading, setIsLoading] = useState(false);
@@ -71,16 +72,16 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (isLogin) {
-        console.log('[AuthForm] Attempting login with email:', email);
+        if (isDev) console.log('[AuthForm] Attempting login with email:', email);
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (signInError) {
-          console.error('[AuthForm] signInWithPassword error:', signInError);
+          if (isDev) console.error('[AuthForm] signInWithPassword error:', signInError);
           throw signInError;
         }
-        console.log('[AuthForm] signInWithPassword success, user:', data.user?.id);
+        if (isDev) console.log('[AuthForm] signInWithPassword success, user:', data.user?.id);
 
         if (data.user && !data.user.email_confirmed_at) {
           await supabase.auth.signOut();
@@ -110,10 +111,10 @@ export function AuthForm({ mode }: AuthFormProps) {
 
             if (profile) {
               actions.setUser(profile);
-              console.log('[AuthForm] ✅ setUser called with profile:', profile.id);
+              if (isDev) console.log('[AuthForm] ✅ setUser called with profile:', profile.id);
             }
           } catch (profileErr) {
-            console.warn('[AuthForm] Profile loading failed/timed out, using fallback:', profileErr);
+            if (isDev) console.warn('[AuthForm] Profile loading failed/timed out, using fallback:', profileErr);
             // Create fallback user from Supabase auth data
             const fallbackUser = {
               id: data.user.id,
@@ -123,15 +124,15 @@ export function AuthForm({ mode }: AuthFormProps) {
                 data.user.email?.split('@')[0] || 'Usuario',
               avatar: data.user.user_metadata?.avatar_url ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.email || 'U')}&background=FF4D00&color=fff`,
-              role: 'Creative Member',
+              role: 'Miembro Creativo',
               username: data.user.email?.split('@')[0] || 'usuario',
             };
             actions.setUser(fallbackUser as Parameters<typeof actions.setUser>[0]);
-            console.log('[AuthForm] ✅ setUser called with fallback:', fallbackUser.id);
+            if (isDev) console.log('[AuthForm] ✅ setUser called with fallback:', fallbackUser.id);
           }
         }
 
-        console.log('[AuthForm] Navigating to /');
+        if (isDev) console.log('[AuthForm] Navigating to /');
         router.push('/');
         router.refresh();
       } else {
@@ -152,7 +153,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setVerificationSent(true);
       }
     } catch (err) {
-      console.error('[AuthForm] handleSubmit caught error:', err);
+      if (isDev) console.error('[AuthForm] handleSubmit caught error:', err);
       setError(getSupabaseAuthError(err));
     } finally {
       setIsLoading(false);
@@ -176,7 +177,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               setVerificationSent(false);
               setIsLogin(true);
             }}
-            className={`text-sm ${isDevMode ? 'text-dev-400 hover:text-dev-300' : 'text-amber-500 hover:text-amber-400'}`}
+            className="text-sm text-accent-500 hover:text-accent-400"
           >
             Volver al inicio de sesión
           </button>
@@ -191,7 +192,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-xl font-semibold inline-block mb-6">
-            Latam<span style={{ color: isDevMode ? '#60A5FA' : '#F59E0B', position: 'relative', top: '1px' }}>Creativa</span>
+            Latam<span className="text-accent-500" style={{ position: 'relative', top: '1px' }}>Creativa</span>
           </Link>
           <h1 className="text-2xl font-bold text-white mb-2">
             {isLogin ? 'Bienvenido de vuelta' : 'Crea tu cuenta'}
@@ -334,15 +335,15 @@ export function AuthForm({ mode }: AuthFormProps) {
                 type="checkbox"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className={`mt-0.5 w-4 h-4 rounded border-neutral-700 bg-neutral-900 focus:ring-0 ${isDevMode ? 'text-dev-500' : 'text-amber-500'}`}
+                className="mt-0.5 w-4 h-4 rounded border-neutral-700 bg-neutral-900 focus:ring-0 text-accent-500"
               />
               <span className="text-xs text-neutral-500">
                 Acepto los{' '}
-                <Link href="/terms" className={`hover:underline ${isDevMode ? 'text-dev-400' : 'text-amber-500'}`}>
+                <Link href="/terms" className="hover:underline text-accent-500">
                   términos
                 </Link>{' '}
                 y la{' '}
-                <Link href="/privacy" className={`hover:underline ${isDevMode ? 'text-dev-400' : 'text-amber-500'}`}>
+                <Link href="/privacy" className="hover:underline text-accent-500">
                   política de privacidad
                 </Link>
               </span>
@@ -363,7 +364,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <button
             type="submit"
             disabled={isLoading || !isEmailValid || !isPasswordValid}
-            className={`w-full h-11 disabled:bg-neutral-800 disabled:text-neutral-600 text-black font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${isDevMode ? 'bg-dev-500 hover:bg-dev-600 text-white' : 'bg-amber-500 hover:bg-amber-400'}`}
+            className="w-full h-11 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 bg-accent-500 hover:bg-accent-600"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -383,7 +384,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               setIsLogin(!isLogin);
               setError(null);
             }}
-            className={`font-medium ${isDevMode ? 'text-dev-400 hover:text-dev-300' : 'text-amber-500 hover:text-amber-400'}`}
+            className="font-medium text-accent-500 hover:text-accent-400"
           >
             {isLogin ? 'Regístrate' : 'Inicia sesión'}
           </button>

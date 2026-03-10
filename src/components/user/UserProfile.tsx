@@ -69,7 +69,7 @@ export function UserProfile({
             className="flex flex-col sm:flex-row sm:items-end gap-4"
           >
             {/* Avatar */}
-            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-neutral-800 ring-4 ring-dark-950">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-neutral-800">
               {user.avatar ? (
                 <Image
                   src={user.avatar as string}
@@ -217,8 +217,8 @@ export function UserProfile({
             <button
               onClick={() => setActiveTab('projects')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'projects'
-                  ? 'text-amber-500 border-amber-500'
-                  : 'text-neutral-400 border-transparent hover:text-white'
+                ? 'text-amber-500 border-amber-500'
+                : 'text-neutral-400 border-transparent hover:text-white'
                 }`}
             >
               <Grid className="w-4 h-4 inline-block mr-2" />
@@ -227,8 +227,8 @@ export function UserProfile({
             <button
               onClick={() => setActiveTab('articles')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'articles'
-                  ? 'text-amber-500 border-amber-500'
-                  : 'text-neutral-400 border-transparent hover:text-white'
+                ? 'text-amber-500 border-amber-500'
+                : 'text-neutral-400 border-transparent hover:text-white'
                 }`}
             >
               <FileText className="w-4 h-4 inline-block mr-2" />

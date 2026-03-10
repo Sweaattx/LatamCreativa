@@ -82,7 +82,7 @@ export const createUISlice: StateCreator<AppStore, [], [], UISlice> = (set, get)
         }
 
         set({ contentMode: mode, activeCategory: 'Home' });
-        get().showToast(mode === 'dev' ? 'Modo Desarrollador Activado 👨‍💻' : 'Modo Creativo Activado 🎨', 'info');
+        get().showToast(mode === 'dev' ? 'Modo Desarrollador Activado' : 'Modo Creativo Activado', 'info');
     },
 
     setCreateMode: (mode) => set({ createMode: mode }),

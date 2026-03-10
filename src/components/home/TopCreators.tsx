@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { topArtists, TopArtist } from '@/data/homeData';
+import { topArtists as STATIC_ARTISTS, TopArtist } from '@/data/homeData';
+import { supabase } from '@/lib/supabase';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getFlagUrl, getCountryName } from '@/utils/countryFlags';
@@ -14,6 +15,26 @@ export function TopCreators() {
     const [sectionRef, isVisible] = useScrollReveal<HTMLElement>();
     const { state } = useAppStore();
     const isDevMode = state.contentMode === 'dev';
+    const [artists, setArtists] = useState<TopArtist[]>(STATIC_ARTISTS);
+
+    const fetchCreators = useCallback(async () => {
+        try {
+            const { data, error } = await (supabase as any).from('profiles').select('id, full_name, role, avatar_url, country').order('followers_count', { ascending: false }).limit(9);
+            if (!error && data && data.length > 0) {
+                setArtists(data.map((p: Record<string, string>) => ({
+                    id: p.id,
+                    name: p.full_name || 'Usuario',
+                    role: p.role || 'Creativo',
+                    avatar: p.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.full_name || 'U')}&background=6366f1&color=fff`,
+                    followers: '',
+                    country: p.country || 'MX',
+                    featured: ''
+                })));
+            }
+        } catch { /* fallback to static */ }
+    }, []);
+
+    useEffect(() => { fetchCreators(); }, [fetchCreators]);
 
     return (
         <section ref={sectionRef} className="py-20 bg-dark-1">
@@ -44,7 +65,7 @@ export function TopCreators() {
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {topArtists.map((artist: TopArtist, i: number) => (
+                    {artists.map((artist: TopArtist, i: number) => (
                         <motion.div
                             key={artist.id}
                             initial={{ opacity: 0, y: 10 }}

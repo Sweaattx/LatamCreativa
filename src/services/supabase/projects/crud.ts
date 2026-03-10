@@ -432,7 +432,7 @@ export const projectsCrud = {
                 hasMore
             };
         } catch (error) {
-            logger.error('Error fetching projects:', error);
+            logger.warn('Error fetching projects:', error instanceof Error ? error.message : 'Unknown error');
             return { data: [], lastId: null, hasMore: false };
         }
     },

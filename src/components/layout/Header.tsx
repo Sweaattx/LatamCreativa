@@ -6,11 +6,12 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Search, Bell, Plus, Menu, X, User, Settings, LogOut,
-  ChevronDown, Home, Compass
+  ChevronDown, Home, Compass, MessageCircle
 } from 'lucide-react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { MENU_GROUPS, BOTTOM_NAV_ITEMS, PRIMARY_NAV_ITEMS } from '@/data/navigation';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 // ============================================
 // MEGA MENU DROPDOWN
@@ -31,7 +32,7 @@ function MegaMenu({
 
   return (
     <div
-      className="absolute top-full left-0 right-0 bg-dark-2 border-b border-dark-5 shadow-xl z-50 animate-slide-down"
+      className="absolute top-full left-0 right-0 bg-dark-2 border-b border-dark-5 z-50 animate-slide-down"
       onMouseLeave={onClose}
     >
       <div className="max-w-[1400px] mx-auto px-6 py-6">
@@ -118,14 +119,30 @@ function MobileDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-dark-0/80 backdrop-blur-sm z-40 lg:hidden"
+        className="fixed inset-0 bg-dark-0/80 backdrop-blur-sm z-40"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-dark-1 border-r border-dark-5 z-50 lg:hidden animate-slide-up overflow-y-auto">
+      <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-dark-1 border-r border-dark-5 z-50 animate-slide-up overflow-y-auto">
         <div className="p-4 border-b border-dark-5 flex items-center justify-between">
-          <span className="text-lg font-semibold">Latam<span style={{ color: isDevMode ? '#60A5FA' : '#F59E0B', position: 'relative', top: '1px' }}>Creativa</span></span>
+          <div className="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 43.02 61.5"
+              className="w-6 h-8 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M1.51,50.24c-.36.2-.78.16-1.02.02s-.49-.51-.49-.92V10.19c0-.46.19-.83.56-1.03L16.45.08c.25-.15.76-.08.96.05s.45.5.45.89l.06,39.15c0,.49-.21.87-.61,1.1L1.51,50.24Z"
+                fill="#fff"
+              />
+              <path
+                d="M13.42,61.32c-.51.28-.93.2-1.32-.04L.9,54.36c-.23-.14-.44-.55-.44-.77,0-.3.19-.61.47-.87l28.57-16.33c.44-.25.87-.25,1.3,0l11.73,6.97c.27.16.49.57.49.81,0,.35-.2.65-.53.9l-29.08,16.24Z"
+                fill={isDevMode ? '#60A5FA' : '#F59E0B'}
+              />
+            </svg>
+          </div>
           <button
             onClick={onClose}
             className="p-2 text-content-3 hover:text-content-1 transition-colors"
@@ -213,7 +230,6 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const createRef = useRef<HTMLDivElement>(null);
@@ -263,24 +279,19 @@ export function Header({ onMenuClick }: HeaderProps) {
         sticky top-0 z-40 h-14 
         bg-dark-1/95 backdrop-blur-md border-b border-dark-5/50
         transition-shadow duration-200
-        ${scrolled ? 'shadow-lg' : ''}
+        ${scrolled ? '' : ''}
       `}>
-        <div className="h-full max-w-[1600px] mx-auto flex items-center justify-between px-4 lg:px-6">
+        <div className="h-full max-w-[1600px] mx-auto flex items-center justify-between px-4 lg:px-6 pl-14">
 
-          {/* Left: Logo + Mobile Menu */}
+          {/* Left: Menu */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMobileDrawerOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-content-3 hover:text-content-1 transition-colors"
+              onClick={onMenuClick}
+              className="p-2 -ml-2 text-content-3 hover:text-content-1 transition-colors"
               aria-label="Menú"
             >
               <Menu className="w-5 h-5" />
             </button>
-
-
-            <Link href="/" className="flex items-center">
-              <span className="text-md font-semibold tracking-tight">Latam<span style={{ color: isDevMode ? '#60A5FA' : '#F59E0B', position: 'relative', top: '1px' }}>Creativa</span></span>
-            </Link>
           </div>
 
           {/* Center - Search */}
@@ -309,18 +320,17 @@ export function Header({ onMenuClick }: HeaderProps) {
 
             {user ? (
               <>
-                {/* Notifications */}
-                <button
+                {/* Messages */}
+                <Link
+                  href="/messages"
                   className="relative p-2.5 text-content-3 hover:text-content-1 transition-colors"
-                  aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
+                  aria-label="Mensajes"
                 >
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className={`absolute top-1.5 right-1.5 min-w-[16px] h-4 flex items-center justify-center text-2xs font-bold text-white rounded-full px-1 ${isDevMode ? 'bg-dev-500' : 'bg-accent-500'}`}>
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </button>
+                  <MessageCircle className="w-5 h-5" />
+                </Link>
+
+                {/* Notifications */}
+                <NotificationBell />
 
                 {/* Create */}
                 <div ref={createRef} className="relative">
@@ -341,7 +351,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </button>
 
                   {createOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 py-1.5 bg-dark-2 border border-dark-5 rounded-xl shadow-lg z-50 animate-scale-in">
+                    <div className="absolute right-0 top-full mt-2 w-48 py-1.5 bg-dark-2 border border-dark-5 rounded-xl z-50 animate-scale-in">
                       <button
                         onClick={() => { router.push('/create/portfolio'); setCreateOpen(false); }}
                         className="w-full px-4 py-2.5 text-left text-sm text-content-2 hover:text-content-1 hover:bg-dark-3/50 transition-colors"
@@ -376,13 +386,13 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 py-1.5 bg-dark-2 border border-dark-5 rounded-xl shadow-lg z-50 animate-scale-in">
+                    <div className="absolute right-0 top-full mt-2 w-52 py-1.5 bg-dark-2 border border-dark-5 rounded-xl z-50 animate-scale-in">
                       <div className="px-4 py-3 border-b border-dark-5">
                         <p className="text-sm font-medium text-content-1 truncate">{user.name}</p>
                         <p className="text-xs text-content-3 truncate">@{user.username || 'usuario'}</p>
                       </div>
                       <div className="py-1">
-                        <button onClick={() => { router.push(`/user/${user.username}`); setProfileOpen(false); }} className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-sm text-content-2 hover:text-content-1 hover:bg-dark-3/50 transition-colors">
+                        <button onClick={() => { router.push(`/user/${user.username || user.id}`); setProfileOpen(false); }} className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-sm text-content-2 hover:text-content-1 hover:bg-dark-3/50 transition-colors">
                           <User className="w-4 h-4" /> Perfil
                         </button>
                         <button onClick={() => { router.push('/settings'); setProfileOpen(false); }} className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-sm text-content-2 hover:text-content-1 hover:bg-dark-3/50 transition-colors">
@@ -419,12 +429,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         />
       </header>
 
-      {/* Mobile Drawer */}
-      <MobileDrawer
-        isOpen={mobileDrawerOpen}
-        onClose={() => setMobileDrawerOpen(false)}
-        isDevMode={isDevMode}
-      />
+
 
       {/* Mobile search */}
       {searchOpen && (

@@ -225,7 +225,7 @@ export const ReplyCard: React.FC<ReplyCardProps> = ({
         >
             {/* Best Answer Badge */}
             {reply.isBestAnswer && (
-                <div className="absolute -top-3 left-4 flex items-center gap-1.5 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full shadow-lg">
+                <div className="absolute -top-3 left-4 flex items-center gap-1.5 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
                     <Award className="w-3.5 h-3.5" />
                     Mejor Respuesta
                 </div>
@@ -287,7 +287,7 @@ export const ReplyCard: React.FC<ReplyCardProps> = ({
                                     className="fixed inset-0 z-10"
                                     onClick={() => setShowMenu(false)}
                                 />
-                                <div className="absolute right-0 top-8 z-20 w-48 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                                <div className="absolute right-0 top-8 z-20 w-48 bg-[#1a1a2e] border border-white/10 rounded-xl overflow-hidden">
                                     {isAuthor && onEdit && (
                                         <button
                                             onClick={() => { onEdit(reply.id); setShowMenu(false); }}

@@ -107,7 +107,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; frame-ancestors 'self';",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; media-src 'self' blob: https: data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; frame-src 'self' https://www.youtube.com https://youtube.com https://sketchfab.com https://*.sketchfab.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
           },
         ],
       },

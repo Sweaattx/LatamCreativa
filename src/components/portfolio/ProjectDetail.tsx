@@ -1,28 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
-  Eye,
   Share2,
   Bookmark,
   MessageCircle,
   ArrowLeft,
+  MapPin,
+  UserPlus,
+  UserCheck,
+  MessageSquare,
+  Users,
+  Send,
+  Trash2,
+  Loader2,
+  Eye,
+  ThumbsUp,
 } from 'lucide-react';
 import { useAppStore } from '@/hooks/useAppStore';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { interactionsService } from '@/services/supabase/interactions';
+import { usersSocial } from '@/services/supabase/users/social';
 import type { PortfolioItem } from '@/types/content';
 
-// Tipos específicos para el componente
 interface ProjectAuthor {
   id: string;
   username?: string;
   name?: string;
   avatar?: string;
   role?: string;
+  location?: string;
+}
+
+interface Comment {
+  id: string;
+  text: string;
+  authorName: string;
+  authorAvatar: string | null;
+  createdAt: string;
 }
 
 interface ProjectDetailProps {
@@ -31,294 +50,380 @@ interface ProjectDetailProps {
   relatedProjects: PortfolioItem[];
 }
 
-export function ProjectDetail({
-  project,
-  author,
-  relatedProjects,
-}: ProjectDetailProps) {
-  const { state } = useAppStore();
+export function ProjectDetail({ project, author, relatedProjects }: ProjectDetailProps) {
+  const { state, actions } = useAppStore();
+  const router = useRouter();
+
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(
-    typeof project.likes === 'number' ? project.likes : 0
-  );
+  const [likeCount, setLikeCount] = useState(typeof project.likes === 'number' ? project.likes : 0);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const saved = state.savedItems.some(s => s.id === project.id);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!state.user) return;
+    interactionsService.isLiked('project', project.id, state.user.id).then(setLiked).catch(() => { });
+    if (author) usersSocial.isFollowing(state.user.id, author.id).then(setFollowing).catch(() => { });
+  }, [state.user, project.id, author]);
+
+  const loadComments = useCallback(async () => {
+    try {
+      const data = await interactionsService.getComments('project', project.id);
+      setComments(data);
+    } catch { /* */ }
+    setCommentsLoaded(true);
+  }, [project.id]);
+
+  useEffect(() => { loadComments(); }, [loadComments]);
 
   const handleLike = async () => {
+    if (!state.user) { router.push('/login'); return; }
+    if (likeLoading) return;
+    setLikeLoading(true);
+    try {
+      const nowLiked = await interactionsService.toggleLike('project', project.id, state.user.id);
+      setLiked(nowLiked);
+      setLikeCount(p => nowLiked ? p + 1 : p - 1);
+    } catch { /* */ }
+    setLikeLoading(false);
+  };
+
+  const handleFollow = async () => {
+    if (!state.user || !author) { router.push('/login'); return; }
+    if (followLoading) return;
+    setFollowLoading(true);
+    const sb = (await import('@/lib/supabase/client')).getSupabaseClient();
+    try {
+      if (following) {
+        const { error } = await (sb as any).from('followers').delete().eq('follower_id', state.user.id).eq('following_id', author.id);
+        if (error) throw error;
+        setFollowing(false);
+        actions.showToast(`Dejaste de seguir a ${author.name || 'este usuario'}`, 'success');
+      } else {
+        const { error } = await (sb as any).from('followers').insert({ follower_id: state.user.id, following_id: author.id });
+        if (error) throw error;
+        setFollowing(true);
+        actions.showToast(`Ahora sigues a ${author.name || 'este usuario'}`, 'success');
+      }
+    } catch (err: any) {
+      console.error('Follow error details:', JSON.stringify(err));
+      actions.showToast('Error al seguir. Intenta de nuevo.', 'error');
+    }
+    setFollowLoading(false);
+  };
+
+  const handleContact = () => {
+    if (!state.user) { router.push('/login'); return; }
+    if (author) {
+      const authorName = encodeURIComponent(author.name || 'Usuario');
+      router.push(`/messages?to=${author.id}&name=${authorName}`);
+    }
+  };
+  const handleShare = async () => { try { if (navigator.share) await navigator.share({ title: project.title, url: window.location.href }); else { await navigator.clipboard.writeText(window.location.href); actions.showToast('URL copiada al portapapeles', 'success'); } } catch { /* */ } };
+  const handleSave = () => { actions.toggleSave({ id: project.id, title: project.title, image: project.image || '', slug: project.slug || '' }); actions.showToast(saved ? 'Eliminado de guardados' : 'Guardado en tu colección', 'success'); };
+
+  const handleComment = async () => {
+    if (!state.user || !commentText.trim() || commentLoading) return;
+    setCommentLoading(true);
+    try { await interactionsService.addComment('project', project.id, state.user.id, commentText.trim()); setCommentText(''); await loadComments(); }
+    catch { actions.showToast('Error al comentar', 'error'); }
+    setCommentLoading(false);
+  };
+
+  const handleDeleteComment = async (id: string) => {
     if (!state.user) return;
-
-    const supabase = getSupabaseClient();
-
-    if (liked) {
-      await supabase
-        .from('likes')
-        .delete()
-        .eq('user_id', state.user.id)
-        .eq('target_id', project.id)
-        .eq('target_type', 'project');
-      setLikeCount((prev) => prev - 1);
-    } else {
-      await supabase.from('likes').insert({
-        user_id: state.user.id,
-        target_id: project.id,
-        target_type: 'project',
-      } as never);
-      setLikeCount((prev) => prev + 1);
-    }
-    setLiked(!liked);
+    try { await interactionsService.deleteComment(id, state.user.id); setComments(prev => prev.filter(c => c.id !== id)); } catch { /* */ }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: project.title,
-        url: window.location.href,
-      });
-    } else {
-      await navigator.clipboard.writeText(window.location.href);
-      alert('URL copiada al portapapeles');
-    }
+  const mainImg = project.image || '';
+  const allMedia = (project.gallery || []).length > 0
+    ? (project.gallery || []).filter(i => i.url !== mainImg).map(i => ({ url: i.url, caption: i.caption || '' }))
+    : (project.images || []).filter(u => u !== mainImg).map(u => ({ url: u, caption: '' }));
+
+  const badges = [...(project.category ? [project.category] : []), ...(project.tools || [])].filter((v, i, a) => a.indexOf(v) === i);
+
+  const pubDate = project.createdAt ? new Date(project.createdAt).toLocaleDateString('es-LA', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
+  const viewsNum = typeof project.views === 'number' ? project.views : 0;
+  const viewsStr = viewsNum >= 1000 ? `${(viewsNum / 1000).toFixed(1)}K` : String(viewsNum);
+
+  const timeAgo = (date: string) => { const m = Math.floor((Date.now() - new Date(date).getTime()) / 60000); if (m < 60) return `hace ${m}m`; const h = Math.floor(m / 60); if (h < 24) return `hace ${h}h`; return `hace ${Math.floor(h / 24)}d`; };
+
+  const sideCard: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.025)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    padding: '14px 16px',
   };
 
-  // Preparar galería de medios
-  const gallery = project.gallery || [];
-  const images = project.images || [];
-  const allMedia = gallery.length > 0
-    ? gallery.map(item => ({ type: item.type || 'image', url: item.url, caption: item.caption || '' }))
-    : images.map(url => ({ type: 'image', url, caption: '' }));
-
-  const hasGallery = allMedia.length > 0;
+  const sectionLabel: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    color: 'rgba(255,255,255,0.35)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    margin: '0 0 10px 0',
+  };
 
   return (
-    <main className="min-h-screen bg-dark-950">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-dark-950/80 backdrop-blur-lg border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link
-            href="/portfolio"
-            className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Volver</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleLike}
-              className={`p-2 rounded-lg transition-colors ${liked
-                  ? 'text-red-500 bg-red-500/10'
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
-                }`}
-              aria-label={liked ? 'Quitar me gusta' : 'Dar me gusta'}
-            >
-              <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+    <div>
+      {/* ══════ STICKY TOP BAR ══════ */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(10,10,15,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Left */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+            <Link href="/portfolio" style={{ flexShrink: 0, padding: 8, color: 'rgba(255,255,255,0.35)', borderRadius: 10, display: 'flex', background: 'rgba(255,255,255,0.03)' }}>
+              <ArrowLeft style={{ width: 18, height: 18 }} />
+            </Link>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>{project.title}</p>
+              {author && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '2px 0 0' }}>{author.name} &middot; {project.category || 'Proyecto'}</p>}
+            </div>
+          </div>
+          {/* Right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={handleLike} disabled={likeLoading} className="topbar-btn" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: liked ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.04)', color: liked ? '#f87171' : 'rgba(255,255,255,0.5)', transition: 'all 0.25s' }}>
+              <Heart style={{ width: 15, height: 15, fill: liked ? 'currentColor' : 'none', transition: 'all 0.25s' }} />
+              {liked ? 'Te gusta' : 'Me gusta'}
             </button>
-            <button
-              className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-              aria-label="Guardar"
-            >
-              <Bookmark className="w-5 h-5" />
+            <button onClick={handleSave} className="topbar-btn" style={{ padding: 9, borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', color: saved ? '#fbbf24' : 'rgba(255,255,255,0.4)', transition: 'all 0.25s' }}>
+              <Bookmark style={{ width: 17, height: 17, fill: saved ? 'currentColor' : 'none' }} />
             </button>
-            <button
-              onClick={handleShare}
-              className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-              aria-label="Compartir"
-            >
-              <Share2 className="w-5 h-5" />
+            <button onClick={handleShare} className="topbar-btn" style={{ padding: 9, borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', transition: 'all 0.25s' }}>
+              <Share2 style={{ width: 17, height: 17 }} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Main Image */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="aspect-video relative rounded-xl overflow-hidden bg-neutral-900"
-            >
+      {/* ══════ CONTENT BODY ══════ */}
+      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 32px 40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 28 }} className="pd-grid">
+
+          {/* ══════ LEFT COLUMN ══════ */}
+          <div style={{ minWidth: 0, overflow: 'hidden' }} className="pd-main">
+
+            {/* Title block */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', lineHeight: 1.15, margin: 0, letterSpacing: '-0.02em' }}>
+                {project.title}
+              </h1>
+              {pubDate && (
+                <p style={{ marginTop: 10, fontSize: 13, color: 'rgba(255,255,255,0.28)', fontWeight: 500 }}>
+                  Publicado el {pubDate}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Badges */}
+            {badges.length > 0 && project.description && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }} style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {badges.map(b => (
+                  <span key={b} style={{ padding: '6px 16px', fontSize: 12, fontWeight: 600, borderRadius: 9999, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>{b}</span>
+                ))}
+              </motion.div>
+            )}
+
+            {/* Description */}
+            {project.description && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} style={{ marginTop: 16 }}>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.5)', whiteSpace: 'pre-wrap', margin: 0 }}>{project.description}</p>
+              </motion.div>
+            )}
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} style={{ marginTop: 20, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', aspectRatio: '16/9', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}>
               {project.image ? (
-                <Image
-                  src={project.image}
-                  alt={project.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+                <Image src={project.image} alt={project.title} fill style={{ objectFit: 'cover' }} priority unoptimized />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-900" />
+                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#1a1a1a,#0d0d0d)' }} />
               )}
             </motion.div>
 
             {/* Gallery */}
-            {hasGallery && (
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {allMedia.map((item, index) => (
-                  <div
-                    key={index}
-                    className="aspect-video relative rounded-lg overflow-hidden bg-neutral-900 cursor-pointer hover:ring-2 hover:ring-amber-500 transition-all"
-                  >
-                    <Image
-                      src={item.url}
-                      alt={`${project.title} - ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Description */}
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold text-white mb-4">Descripción</h2>
-              <div className="prose prose-invert prose-sm max-w-none">
-                <p className="text-neutral-300 whitespace-pre-wrap">
-                  {project.description || 'Sin descripción disponible.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Tags */}
-            {project.tags && project.tags.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-lg font-semibold text-white mb-4">Etiquetas</h2>
-                <div className="flex flex-wrap gap-2">
-                  {project.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-neutral-800 text-neutral-300 text-sm rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            {allMedia.length > 0 && allMedia.map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }} style={{ marginTop: 16 }}>
+                <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', aspectRatio: '16/9', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}>
+                  <Image src={item.url} alt={`${project.title} - ${i + 1}`} fill style={{ objectFit: 'cover' }} unoptimized />
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Project Info */}
-            <div className="bg-neutral-900 rounded-xl p-6">
-              <h1 className="text-xl font-bold text-white mb-2">
-                {project.title}
-              </h1>
-              <p className="text-sm text-amber-500 mb-4">
-                {project.category || 'Proyecto'}
-              </p>
-
-              {/* Stats */}
-              <div className="flex items-center gap-4 text-sm text-neutral-400">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {project.views || 0}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  {likeCount}
-                </span>
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4" />0
-                </span>
-              </div>
-            </div>
-
-            {/* Author */}
-            {author && (
-              <div className="bg-neutral-900 rounded-xl p-6">
-                <h2 className="text-sm font-medium text-neutral-400 mb-4">
-                  Creado por
-                </h2>
-                <Link
-                  href={`/user/${author.username || author.id}`}
-                  className="flex items-center gap-3 group"
-                >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-neutral-800">
-                    {author.avatar ? (
-                      <Image
-                        src={author.avatar}
-                        alt={author.name || 'Autor'}
-                        width={48}
-                        height={48}
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold">
-                        {author.name?.charAt(0) || '?'}
-                      </div>
-                    )}
+                {item.caption && (
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 3, height: 18, borderRadius: 2, background: '#f59e0b' }} />
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', margin: 0 }}>{item.caption}</p>
                   </div>
-                  <div>
-                    <p className="text-white font-medium group-hover:text-amber-500 transition-colors">
-                      {author.name || 'Anónimo'}
-                    </p>
-                    <p className="text-sm text-neutral-500">
-                      {author.role || 'Creativo'}
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            )}
+                )}
+              </motion.div>
+            ))}
 
-            {/* Tools */}
-            {project.tools && project.tools.length > 0 && (
-              <div className="bg-neutral-900 rounded-xl p-6">
-                <h2 className="text-sm font-medium text-neutral-400 mb-4">
-                  Herramientas
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {project.tools.map((tool) => (
-                    <span
-                      key={tool}
-                      className="px-3 py-1 bg-neutral-800 text-neutral-300 text-sm rounded-lg"
-                    >
-                      {tool}
-                    </span>
-                  ))}
+            {/* ─── Comments ─── */}
+            <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 600, color: '#fff', margin: '0 0 14px' }}>
+                <MessageCircle style={{ width: 18, height: 18, color: '#f59e0b' }} />
+                Comentarios
+                <span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.25)' }}>({comments.length})</span>
+              </h2>
+
+              {state.user ? (
+
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {state.user.avatar ? <Image src={state.user.avatar} alt="" width={38} height={38} style={{ borderRadius: '50%', objectFit: 'cover' }} unoptimized /> : <span style={{ fontSize: 14, fontWeight: 700, color: '#f59e0b' }}>{state.user.name?.charAt(0) || '?'}</span>}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', gap: 8 }}>
+                    <input type="text" value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleComment()} placeholder="Escribe un comentario..." style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '11px 16px', fontSize: 14, color: '#fff', outline: 'none', transition: 'border 0.2s' }} />
+                    <button onClick={handleComment} disabled={!commentText.trim() || commentLoading} style={{ padding: '11px 16px', borderRadius: 12, border: 'none', cursor: commentText.trim() ? 'pointer' : 'default', background: commentText.trim() ? '#f59e0b' : 'rgba(255,255,255,0.04)', color: commentText.trim() ? '#000' : 'rgba(255,255,255,0.15)', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}>
+                      {commentLoading ? <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> : <Send style={{ width: 16, height: 16 }} />}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div style={{ borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: '20px', textAlign: 'center', marginBottom: 24 }}>
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}><Link href="/login" style={{ color: '#f59e0b', fontWeight: 600, textDecoration: 'none' }}>Inicia sesión</Link> para comentar</p>
+                </div>
+              )}
 
-            {/* Related Projects */}
-            {relatedProjects.length > 0 && (
-              <div className="bg-neutral-900 rounded-xl p-6">
-                <h2 className="text-sm font-medium text-neutral-400 mb-4">
-                  Proyectos relacionados
-                </h2>
-                <div className="space-y-3">
-                  {relatedProjects.map((related) => (
-                    <Link
-                      key={related.id}
-                      href={`/portfolio/${related.slug}`}
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="w-16 h-12 rounded-md overflow-hidden bg-neutral-800 flex-shrink-0">
-                        {related.image ? (
-                          <Image
-                            src={related.image}
-                            alt={related.title}
-                            width={64}
-                            height={48}
-                            className="object-cover w-full h-full"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-800" />
+              <div>
+                {!commentsLoaded ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 28 }}>
+                    <Loader2 style={{ width: 16, height: 16, color: 'rgba(255,255,255,0.2)', animation: 'spin 1s linear infinite' }} />
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)' }}>Cargando...</span>
+                  </div>
+                ) : comments.length === 0 ? (
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.15)', textAlign: 'center', padding: '12px 0' }}>Sé el primero en comentar</p>
+                ) : (
+                  <AnimatePresence>
+                    {comments.map(c => (
+                      <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: 'flex', gap: 12, padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {c.authorAvatar ? <Image src={c.authorAvatar} alt="" width={34} height={34} style={{ borderRadius: '50%', objectFit: 'cover' }} unoptimized /> : <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{c.authorName.charAt(0)}</span>}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{c.authorName}</span>
+                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>{timeAgo(c.createdAt)}</span>
+                          </div>
+                          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '6px 0 0', lineHeight: 1.5 }}>{c.text}</p>
+                        </div>
+                        {state.user?.id && (
+                          <button onClick={() => handleDeleteComment(c.id)} style={{ padding: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.1)', flexShrink: 0, alignSelf: 'flex-start', borderRadius: 6 }}>
+                            <Trash2 style={{ width: 14, height: 14 }} />
+                          </button>
                         )}
-                      </div>
-                      <p className="text-sm text-white group-hover:text-amber-500 transition-colors line-clamp-2">
-                        {related.title}
-                      </p>
-                    </Link>
-                  ))}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ══════ RIGHT SIDEBAR ══════ */}
+          <div className="pd-side">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              {/* Author Card */}
+              {author && (
+                <div style={sideCard}>
+                  <Link href={`/user/${author.username || author.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: '#1a1a1a', border: '2px solid rgba(255,255,255,0.08)' }}>
+                      {author.avatar
+                        ? <Image src={author.avatar} alt={author.name || ''} width={44} height={44} style={{ objectFit: 'cover', width: '100%', height: '100%' }} unoptimized />
+                        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 18 }}>{author.name?.charAt(0) || '?'}</div>
+                      }
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.2 }}>{author.name || 'Anónimo'}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>{author.role || 'Creativo'}</p>
+                    </div>
+                  </Link>
+
+                  {author.location && (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 2 }}>
+                      <MapPin style={{ width: 12, height: 12, color: 'rgba(255,255,255,0.2)' }} />
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{author.location}</span>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                    <button onClick={handleFollow} disabled={followLoading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', background: following ? 'rgba(255,255,255,0.05)' : '#f59e0b', color: following ? 'rgba(255,255,255,0.6)' : '#000', fontSize: 12, fontWeight: 600, borderRadius: 8, border: following ? '1px solid rgba(255,255,255,0.08)' : 'none', cursor: 'pointer', transition: 'all 0.25s' }}>
+                      {followLoading ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> : following ? <><UserCheck style={{ width: 14, height: 14 }} /> Siguiendo</> : <><UserPlus style={{ width: 14, height: 14 }} /> Seguir</>}
+                    </button>
+                    <button onClick={handleContact} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600, borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.25s' }}>
+                      <MessageSquare style={{ width: 14, height: 14 }} /> Contactar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div style={sideCard}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, textAlign: 'center' }}>
+                  <div><p style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0 }}>{viewsStr}</p><p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>Vistas</p></div>
+                  <div><p style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0 }}>{likeCount}</p><p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>Likes</p></div>
+                  <div><p style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0 }}>{comments.length}</p><p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>Coment.</p></div>
                 </div>
               </div>
-            )}
+
+              {/* Tags */}
+              {project.tags && project.tags.length > 0 && (
+                <div style={sideCard}>
+                  <h3 style={sectionLabel}>Etiquetas</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {project.tags.map(t => (
+                      <span key={t} style={{ padding: '5px 12px', fontSize: 12, fontWeight: 500, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>#{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={sideCard}>
+                <h3 style={sectionLabel}>Colaboradores</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.06)' }}>
+                  <Users style={{ width: 15, height: 15, color: 'rgba(255,255,255,0.15)' }} />
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Sin colaboradores</span>
+                </div>
+              </div>
+
+              {/* More from author */}
+              {author && (
+                <div style={sideCard}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <h3 style={{ ...sectionLabel, margin: 0 }}>Más de {author.name?.split(' ')[0] || 'este autor'}</h3>
+                    <Link href={`/user/${author.username || author.id}`} style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, textDecoration: 'none' }}>Ver todo →</Link>
+                  </div>
+                  {relatedProjects.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {relatedProjects.slice(0, 4).map(r => (
+                        <Link key={r.id} href={`/portfolio/${r.slug}`} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', display: 'block', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          {r.image ? <Image src={r.image} alt={r.title} fill style={{ objectFit: 'cover' }} unoptimized /> : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#2a2a2a,#1a1a1a)' }} />}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.06)', textAlign: 'center' }}>
+                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.18)', margin: 0 }}>Sin más proyectos por ahora</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
           </div>
+
         </div>
       </div>
-    </main>
+
+      <style jsx>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .topbar-btn:hover { background: rgba(255,255,255,0.08) !important; }
+        @media (min-width: 1024px) {
+          .pd-grid { grid-template-columns: 1fr 340px !important; }
+          .pd-side { grid-column: 2 !important; grid-row: 1 !important; position: sticky !important; top: 84px !important; align-self: start !important; }
+          .pd-main { grid-column: 1 !important; grid-row: 1 !important; }
+        }
+      `}</style>
+    </div>
   );
 }

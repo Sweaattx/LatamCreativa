@@ -27,7 +27,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, topic
       <div
         role="dialog"
         aria-labelledby="filter-panel-title"
-        className="absolute top-full right-0 mt-2 w-80 bg-dark-2 border border-dark-5/50 rounded-xl shadow-xl z-50 p-5 animate-fadeIn origin-top-right"
+        className="absolute top-full right-0 mt-2 w-80 bg-dark-2 border border-dark-5/50 rounded-xl z-50 p-5 animate-fadeIn origin-top-right"
       >
         <div className="flex justify-between items-center mb-4 border-b border-dark-5/50 pb-2">
           <h3 id="filter-panel-title" className="font-medium text-content-1">Filtrar por</h3>
@@ -86,7 +86,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, topic
           <button onClick={onClose} className="flex-1 py-2 text-sm font-medium text-content-3 hover:text-content-1 transition-colors">
             Limpiar
           </button>
-          <button onClick={onClose} className="flex-1 py-2 bg-accent-500 text-white font-medium rounded-lg text-sm hover:bg-accent-600 transition-colors shadow-lg shadow-glow-orange">
+          <button onClick={onClose} className="flex-1 py-2 bg-accent-500 text-white font-medium rounded-lg text-sm hover:bg-accent-600 transition-colors">
             Aplicar
           </button>
         </div>

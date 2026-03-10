@@ -21,7 +21,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const variantStyles = {
     default: 'bg-dark-2 border border-dark-5/50',
-    elevated: 'bg-dark-2/80 border border-dark-5/50 shadow-lg',
+    elevated: 'bg-dark-2/80 border border-dark-5/50',
     interactive: 'bg-dark-2/50 border border-dark-5/30 hover:bg-dark-2 hover:border-dark-5 cursor-pointer',
     ghost: 'bg-transparent',
 };

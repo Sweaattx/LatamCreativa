@@ -10,10 +10,10 @@ import { supabase } from '../../lib/supabase';
 interface DbProject {
     id: string;
     title: string;
-    author_name: string | null;
+    artist_username: string | null;
     category: string | null;
     tags: string[] | null;
-    software: string[] | null;
+    tools: string[] | null;
     description: string | null;
     images: string[] | null;
     image: string | null;
@@ -78,7 +78,7 @@ const searchProjects = async (searchTerm: string, maxResults: number): Promise<S
 
         const { data, error } = await supabase
             .from('projects')
-            .select('id, title, author_name, category, tags, software, description, images, image, slug')
+            .select('id, title, artist_username, category, tags, tools, description, images, image, slug')
             .eq('status', 'published')
             .limit(100);
 
@@ -90,24 +90,24 @@ const searchProjects = async (searchTerm: string, maxResults: number): Promise<S
         projects.forEach(project => {
             const title = project.title || '';
             const normalizedTitle = normalizeSearch(title);
-            const authorName = normalizeSearch(project.author_name || '');
+            const authorName = normalizeSearch(project.artist_username || '');
             const category = normalizeSearch(project.category || '');
             const tags = (project.tags || []).map((t: string) => normalizeSearch(t));
-            const software = (project.software || []).map((s: string) => normalizeSearch(s));
+            const tools = (project.tools || []).map((s: string) => normalizeSearch(s));
             const description = normalizeSearch(project.description || '');
 
             const matchesTitle = normalizedTitle.includes(normalizedTerm);
             const matchesAuthor = authorName.includes(normalizedTerm);
             const matchesCategory = category.includes(normalizedTerm);
             const matchesTags = tags.some((tag: string) => tag.includes(normalizedTerm));
-            const matchesSoftware = software.some((sw: string) => sw.includes(normalizedTerm));
+            const matchesTools = tools.some((t: string) => t.includes(normalizedTerm));
             const matchesDescription = description.includes(normalizedTerm);
 
-            if (matchesTitle || matchesAuthor || matchesCategory || matchesTags || matchesSoftware || matchesDescription) {
-                let subtitle = `por ${project.author_name || 'Anónimo'}`;
-                if (matchesSoftware && project.software) {
-                    const matchedSw = project.software.find((s: string) => normalizeSearch(s).includes(normalizedTerm));
-                    if (matchedSw) subtitle += ` • ${matchedSw}`;
+            if (matchesTitle || matchesAuthor || matchesCategory || matchesTags || matchesTools || matchesDescription) {
+                let subtitle = `por ${project.artist_username || 'Anónimo'}`;
+                if (matchesTools && project.tools) {
+                    const matchedTool = project.tools.find((s: string) => normalizeSearch(s).includes(normalizedTerm));
+                    if (matchedTool) subtitle += ` • ${matchedTool}`;
                 } else if (project.category) {
                     subtitle += ` • ${project.category}`;
                 }

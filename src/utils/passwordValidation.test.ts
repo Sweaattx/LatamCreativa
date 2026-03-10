@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Password Validation Tests
  * 
  * Tests for password validation logic used in registration and password change.
@@ -80,3 +80,4 @@ describe('Password Validation', () => {
         });
     });
 });
+

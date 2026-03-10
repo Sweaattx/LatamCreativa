@@ -51,15 +51,12 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
       let imageUrl = image;
 
       if (imageFile) {
-        const fileName = `${Date.now()}_${imageFile.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('blog-covers')
-          .upload(fileName, imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage.from('blog-covers').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
+        // Convert to base64 data URL for local persistence
+        imageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
+        });
       } else if (!image) {
         imageUrl =
           'https://images.unsplash.com/photo-1542435503-956c469947f6?q=80&w=1000&auto=format&fit=crop';

@@ -37,7 +37,7 @@ export const CreatePageLayout: React.FC<CreatePageLayoutProps> = ({
         <button
           onClick={onAction}
           disabled={isLoading}
-          className={`px-4 py-2 font-bold rounded-lg text-sm transition-all shadow-lg ${actionColorClass} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 font-bold rounded-lg text-sm transition-colors ${actionColorClass} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isLoading ? 'Publicando...' : actionLabel}
         </button>

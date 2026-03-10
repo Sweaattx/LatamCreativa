@@ -16,6 +16,7 @@ export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (set, 
     user: null,
     cartItems: [],
     likedItems: [],
+    savedItems: [],
     createdItems: [],
     notifications: [],
     collections: [],
@@ -77,6 +78,18 @@ export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (set, 
         };
     }),
 
+    // Save/Bookmark Actions
+    toggleSave: (item) => {
+        const { savedItems, showToast } = get();
+        const isSaved = savedItems.some(s => s.id === item.id);
+        set({
+            savedItems: isSaved
+                ? savedItems.filter(s => s.id !== item.id)
+                : [...savedItems, item]
+        });
+        showToast(isSaved ? 'Eliminado de guardados' : 'Guardado en tu colección', 'success');
+    },
+
     // Content Actions
     addCreatedItem: (item) => set((state) => ({
         createdItems: [item, ...state.createdItems]
@@ -88,21 +101,18 @@ export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (set, 
 
     // Notification Actions
     markNotificationRead: async (id) => {
-        const { user } = get();
-        if (user) await api.markNotificationRead(user.id, id.toString());
+        await notificationsService.markAsRead(id.toString());
         set((state) => ({
             notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
         }));
     },
 
     deleteNotification: async (id) => {
-        const { user } = get();
-        if (!user) return;
         // Optimistic update
         set((state) => ({
             notifications: state.notifications.filter((n) => n.id !== id),
         }));
-        await notificationsService.deleteNotification(user.id, String(id));
+        await notificationsService.markAsRead(String(id));
     },
 
     markAllNotificationsRead: () => set((state) => ({
@@ -118,8 +128,13 @@ export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (set, 
 
         set({ isLoadingNotifications: true });
 
-        const unsubscribe = api.subscribeToNotifications(userId, (notifications) => {
-            set({ notifications, isLoadingNotifications: false });
+        // Load initial notifications then subscribe to real-time
+        notificationsService.getAll(userId).then((items) => {
+            set({ notifications: items as any[], isLoadingNotifications: false });
+        }).catch(() => set({ isLoadingNotifications: false }));
+
+        const unsubscribe = notificationsService.subscribeToNew(userId, (notification) => {
+            set((state) => ({ notifications: [notification as any, ...state.notifications] }));
         });
 
         set({ unsubscribeNotifications: unsubscribe });

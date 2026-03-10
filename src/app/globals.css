@@ -1,8 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Google Fonts removed — Inter is loaded via next/font/google in layout.tsx */
+/* JetBrains Mono should be loaded via next/font where needed */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Portfolio card animations are handled via inline styles in React */
 
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hidden::-webkit-scrollbar {
@@ -47,6 +50,79 @@
 html {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ========================================
+   Safe Area Utilities (iOS notch/home indicator)
+   Requires viewport-fit=cover in <meta viewport>
+   ======================================== */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-pl {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-pr {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.safe-area-mt {
+  margin-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-mb {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Dynamic viewport height — accounts for mobile browser chrome (URL bar) */
+.h-dvh {
+  height: 100dvh;
+}
+
+.min-h-dvh {
+  min-height: 100dvh;
+}
+
+@supports not (height: 100dvh) {
+  .h-dvh {
+    height: 100vh;
+  }
+
+  .min-h-dvh {
+    min-height: 100vh;
+  }
+}
+
+/* ========================================
+   Shadow & Border Design Tokens
+   Minimal, elegant depth hierarchy
+   ======================================== */
+.shadow-subtle {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.shadow-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.shadow-modal {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.border-subtle {
+  border-color: rgba(30, 36, 46, 0.4);
 }
 
 /* ========================================
@@ -101,135 +177,59 @@ html {
 /* ========================================
    Dev Mode: Override amber/orange → blue
    Applied via data-mode="dev" on <html>
+   Accent-* colors use CSS vars via Tailwind config,
+   so only need to override the vars here.
    ======================================== */
 [data-mode="dev"] {
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: rgba(59, 130, 246, 0.08);
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --accent-400: #60A5FA;
-  --accent-500: #3B82F6;
-  --accent-600: #2563EB;
+  --accent: #60A5FA;
+  --accent-hover: #3B82F6;
+  --accent-50: #EFF6FF;
+  --accent-100: #DBEAFE;
+  --accent-200: #BFDBFE;
+  --accent-300: #93C5FD;
+  --accent-400: #93C5FD;
+  --accent-500: #60A5FA;
+  --accent-600: #3B82F6;
+  --accent-700: #1D4ED8;
+  --accent-subtle: rgba(96, 165, 250, 0.06);
+  --accent-glow: rgba(96, 165, 250, 0.12);
 }
 
-/* --- Dev mode: amber/accent → blue (consolidated overrides) --- */
-[data-mode="dev"] .text-accent-50 {
-  color: #EFF6FF !important;
-}
-
-[data-mode="dev"] .text-accent-100 {
-  color: #DBEAFE !important;
-}
-
-[data-mode="dev"] .text-accent-200 {
-  color: #BFDBFE !important;
-}
-
-[data-mode="dev"] .text-accent-300 {
-  color: #93C5FD !important;
-}
-
-[data-mode="dev"] .text-accent-400,
-[data-mode="dev"] .text-amber-400,
-[data-mode="dev"] .text-amber-400.fill-current,
-[data-mode="dev"] .hover\:text-accent-400:hover,
-[data-mode="dev"] .hover\:text-amber-400:hover,
-[data-mode="dev"] .group-hover\:text-accent-400:is(:where(.group):hover *),
-[data-mode="dev"] .dark\:text-amber-400:is(.dark *) {
-  color: #60A5FA !important;
-}
-
-[data-mode="dev"] .text-accent-500,
-[data-mode="dev"] .text-amber-500,
-[data-mode="dev"] .hover\:text-accent-500:hover,
-[data-mode="dev"] .hover\:text-amber-500:hover,
-[data-mode="dev"] .group-hover\:text-accent-500:is(:where(.group):hover *),
-[data-mode="dev"] .group-hover\:text-amber-500:is(:where(.group):hover *),
-[data-mode="dev"] .dark\:text-amber-500:is(.dark *) {
-  color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .text-accent-600,
-[data-mode="dev"] .text-amber-600 {
-  color: #2563EB !important;
-}
-
-[data-mode="dev"] .text-accent-700 {
-  color: #1D4ED8 !important;
-}
-
-[data-mode="dev"] .text-amber-500\/80 {
-  color: rgba(59, 130, 246, 0.8) !important;
-}
-
-[data-mode="dev"] .bg-accent-400,
-[data-mode="dev"] .bg-amber-400,
-[data-mode="dev"] .hover\:bg-accent-glow:hover,
-[data-mode="dev"] .hover\:bg-amber-400:hover {
-  background-color: #60A5FA !important;
-}
-
-[data-mode="dev"] .bg-accent-500,
-[data-mode="dev"] .bg-amber-500,
-[data-mode="dev"] .hover\:bg-accent-500:hover,
-[data-mode="dev"] .hover\:bg-amber-500:hover {
+/* --- Dev Mode: override ONLY hardcoded amber and orange --- */
+[data-mode="dev"] [class*="bg-amber-500"],
+[data-mode="dev"] [class*="bg-orange-500"] {
   background-color: #3B82F6 !important;
 }
 
-[data-mode="dev"] .bg-accent-600,
-[data-mode="dev"] .bg-amber-600,
-[data-mode="dev"] .hover\:bg-accent-600:hover,
-[data-mode="dev"] .hover\:bg-amber-600:hover {
+[data-mode="dev"] [class*="bg-amber-400"],
+[data-mode="dev"] [class*="bg-orange-400"] {
+  background-color: #60A5FA !important;
+}
+
+[data-mode="dev"] [class*="bg-amber-600"],
+[data-mode="dev"] [class*="bg-orange-600"] {
   background-color: #2563EB !important;
 }
 
-[data-mode="dev"] .bg-accent-subtle {
-  background-color: rgba(59, 130, 246, 0.08) !important;
+[data-mode="dev"] .text-amber-400,
+[data-mode="dev"] .text-amber-300,
+[data-mode="dev"] .text-orange-400 {
+  color: #93C5FD !important;
 }
 
-[data-mode="dev"] .bg-accent-glow {
-  background-color: rgba(59, 130, 246, 0.15) !important;
+[data-mode="dev"] .text-amber-600,
+[data-mode="dev"] .text-orange-600 {
+  color: #60A5FA !important;
 }
 
-[data-mode="dev"] .bg-accent-500\/5 {
-  background-color: rgba(59, 130, 246, 0.05) !important;
+[data-mode="dev"] [class*="from-amber-"],
+[data-mode="dev"] [class*="from-orange-"] {
+  --tw-gradient-from: #3B82F6 !important;
 }
 
-[data-mode="dev"] .bg-accent-500\/10,
-[data-mode="dev"] .bg-amber-500\/10 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-[data-mode="dev"] .bg-accent-500\/20,
-[data-mode="dev"] .bg-amber-500\/20 {
-  background-color: rgba(59, 130, 246, 0.2) !important;
-}
-
-[data-mode="dev"] .border-accent-500,
-[data-mode="dev"] .border-amber-500,
-[data-mode="dev"] .focus\:border-accent-500:focus,
-[data-mode="dev"] .focus\:border-amber-500:focus {
-  border-color: #3B82F6 !important;
-}
-
-[data-mode="dev"] .border-accent-400 {
-  border-color: #60A5FA !important;
-}
-
-[data-mode="dev"] .border-accent-500\/20,
-[data-mode="dev"] .border-accent-500\/30 {
-  border-color: rgba(59, 130, 246, 0.3) !important;
-}
-
-[data-mode="dev"] .border-accent-500\/50,
-[data-mode="dev"] .border-amber-500\/50,
-[data-mode="dev"] .focus\:border-accent-500\/50:focus {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-}
-
-[data-mode="dev"] .ring-amber-500,
-[data-mode="dev"] .hover\:ring-amber-500:hover {
-  --tw-ring-color: #3B82F6 !important;
+[data-mode="dev"] [class*="to-amber-"],
+[data-mode="dev"] [class*="to-orange-"] {
+  --tw-gradient-to: #2563EB !important;
 }
 
 [data-mode="dev"] .shadow-glow-orange,
@@ -237,34 +237,32 @@ html {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
 }
 
-[data-mode="dev"] .from-accent-500,
-[data-mode="dev"] .from-amber-500 {
-  --tw-gradient-from: #3B82F6 !important;
+/* --- FILL for SVG icons --- */
+[data-mode="dev"] [class*="fill-amber-"],
+[data-mode="dev"] [class*="fill-orange-"],
+[data-mode="dev"] [class*="fill-accent-"] {
+  fill: #3B82F6 !important;
 }
 
-[data-mode="dev"] .to-accent-600,
-[data-mode="dev"] .to-orange-600 {
-  --tw-gradient-to: #2563EB !important;
+/* --- DECORATION --- */
+[data-mode="dev"] [class*="decoration-amber-"],
+[data-mode="dev"] [class*="decoration-orange-"],
+[data-mode="dev"] [class*="decoration-accent-"] {
+  text-decoration-color: #3B82F6 !important;
 }
 
-[data-mode="dev"] .from-accent-500\/5 {
-  --tw-gradient-from: rgba(59, 130, 246, 0.05) !important;
+/* --- CONTRAST FIX: text-black on solid blue buttons → text-white --- */
+[data-mode="dev"] [class*="bg-amber-500"][class*="text-black"],
+[data-mode="dev"] [class*="bg-amber-600"][class*="text-black"],
+[data-mode="dev"] [class*="bg-accent-500"][class*="text-black"],
+[data-mode="dev"] [class*="bg-accent-600"][class*="text-black"] {
+  color: #FFFFFF !important;
 }
 
-[data-mode="dev"] .from-accent-500\/10 {
-  --tw-gradient-from: rgba(59, 130, 246, 0.1) !important;
-}
-
-[data-mode="dev"] .to-accent-400\/5 {
-  --tw-gradient-to: rgba(96, 165, 250, 0.05) !important;
-}
-
-[data-mode="dev"] .from-amber-500\/20 {
-  --tw-gradient-from: rgba(59, 130, 246, 0.2) !important;
-}
-
-[data-mode="dev"] .to-orange-600\/20 {
-  --tw-gradient-to: rgba(37, 99, 235, 0.2) !important;
+/* --- CONTRAST FIX: hover states too --- */
+[data-mode="dev"] [class*="hover\:bg-amber-"][class*="text-black"]:hover,
+[data-mode="dev"] [class*="hover\:bg-accent-"][class*="text-black"]:hover {
+  color: #FFFFFF !important;
 }
 
 /* ========================================
@@ -518,6 +516,32 @@ textarea:focus-visible {
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
     border-radius: 0.5rem;
+  }
+
+  /* Modal input — used in EditProfileModal */
+  .modal-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    color: var(--text-1);
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    transition: border-color var(--duration-base) var(--ease-smooth);
+  }
+
+  .modal-input::placeholder {
+    color: var(--muted);
+  }
+
+  .modal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .modal-input:hover:not(:focus) {
+    border-color: var(--border-hover);
   }
 }
 

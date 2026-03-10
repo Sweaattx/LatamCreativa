@@ -11,6 +11,7 @@ import { usersService } from './users';
 import { notificationsService } from './notifications';
 import { collectionsService } from './collections';
 import { forumService } from './forum';
+import { reportsService } from './reports';
 
 // Re-export shared types
 export type { PaginatedResult } from './utils';
@@ -33,7 +34,10 @@ export const api = {
     ...collectionsService,
 
     // Forum
-    ...forumService
+    ...forumService,
+
+    // Reports
+    ...reportsService,
 };
 
 // Named exports for direct imports
@@ -44,3 +48,8 @@ export { notificationsService } from './notifications';
 export { collectionsService } from './collections';
 export { forumService } from './forum';
 export { storageService } from './storage';
+export { reportsService } from './reports';
+export { chatService } from './chat';
+export { friendsService } from './friends';
+export { searchService } from './search';
+export { getFeed, getSuggestedUsers, getTrendingTags } from './feed';

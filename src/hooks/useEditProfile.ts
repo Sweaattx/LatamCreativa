@@ -15,6 +15,8 @@ interface EditProfileState {
     city: string;
     bio: string;
     availableForWork: boolean;
+    coverUrl: string;
+    coverPosition: number;
 }
 
 interface ImageState {
@@ -47,7 +49,9 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
         country: '',
         city: '',
         bio: '',
-        availableForWork: false
+        availableForWork: false,
+        coverUrl: '',
+        coverPosition: 50
     });
 
     const [collections, setCollections] = useState<CollectionState>({
@@ -80,7 +84,18 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
                 country: user.country || user.location || '',
                 city: user.city || '',
                 bio: user.bio || '',
-                availableForWork: user.availableForWork || false
+                availableForWork: user.availableForWork || false,
+                coverUrl: user.coverImage || '',
+                coverPosition: typeof user.coverPosition === 'number'
+                    ? user.coverPosition
+                    : (typeof user.coverPosition === 'string' && !isNaN(Number(user.coverPosition)))
+                        ? Number(user.coverPosition)
+                        : (() => {
+                            try {
+                                const saved = localStorage.getItem(`cover_position_${user.id}`);
+                                return saved ? Number(saved) : 50;
+                            } catch { return 50; }
+                        })()
             });
 
             setCollections({
@@ -114,7 +129,8 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
         }
 
         if (field === 'username') {
-            const usernameValue = value as string;
+            const usernameValue = (value as string).toLowerCase();
+            setFormData(prev => ({ ...prev, username: usernameValue }));
             // Basic validation
             if (usernameValue.length < 3) {
                 setUsernameError('Mínimo 3 caracteres');
@@ -151,8 +167,10 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
         setIsSaving(true);
         try {
             // Verificación de disponibilidad del username si ha cambiado
-            if (formData.username !== user.username) {
-                const isAvailable = await usersService.checkUsernameAvailability(formData.username);
+            const currentUsername = user.username || '';
+            const newUsername = formData.username || '';
+            if (newUsername && newUsername !== currentUsername) {
+                const isAvailable = await usersService.checkUsernameAvailability(newUsername, user.id);
                 if (!isAvailable) {
                     throw new Error('Este nombre de usuario ya está en uso.');
                 }
@@ -174,7 +192,15 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
                 if (user.coverImage) {
                     await storageService.deleteFromUrl(user.coverImage);
                 }
-                coverUrl = await storageService.uploadImage(images.coverFile, `users/${user.id}/cover_${Date.now()}`);
+                const ext = images.coverFile.name.split('.').pop() || 'jpg';
+                coverUrl = await storageService.uploadImage(
+                    images.coverFile,
+                    `users/${user.id}/cover_${Date.now()}.${ext}`,
+                    { compress: images.coverFile.type !== 'image/gif' }
+                );
+            } else if (formData.coverUrl && formData.coverUrl !== user.coverImage) {
+                // Use pasted URL directly
+                coverUrl = formData.coverUrl;
             }
 
             // 2. Prepare Updates
@@ -184,20 +210,26 @@ export const useEditProfile = (isOpen: boolean, onClose: () => void) => {
                 name: `${formData.firstName} ${formData.lastName}`.trim(),
                 username: formData.username,
                 role: formData.role,
-                country: formData.country, // Ensure both fields are synced if needed
+                country: formData.country,
                 location: formData.city ? `${formData.city}, ${formData.country}` : formData.country,
                 city: formData.city,
                 bio: formData.bio,
                 availableForWork: formData.availableForWork,
                 avatar: avatarUrl,
-                photoURL: avatarUrl, // Sync photoURL
+                photoURL: avatarUrl,
                 coverImage: coverUrl,
+                coverPosition: formData.coverPosition,
                 experience: collections.experience,
                 education: collections.education,
                 skills: collections.skills,
                 socialLinks: collections.socialLinks,
                 isProfileComplete: true
             };
+
+            // Also persist coverPosition to localStorage as fallback
+            try {
+                localStorage.setItem(`cover_position_${user.id}`, String(formData.coverPosition));
+            } catch { /* ignore */ }
 
             // 3. Optimistic Update
             setUser({ ...user, ...updates } as User);

@@ -537,6 +537,99 @@ export interface Database {
                     status?: string
                 }
             }
+            conversations: {
+                Row: {
+                    id: string
+                    type: 'direct' | 'group'
+                    title: string | null
+                    last_message: string | null
+                    last_message_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    type?: 'direct' | 'group'
+                    title?: string | null
+                    last_message?: string | null
+                    last_message_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    title?: string | null
+                    last_message?: string | null
+                    last_message_at?: string | null
+                    updated_at?: string
+                }
+            }
+            conversation_participants: {
+                Row: {
+                    id: string
+                    conversation_id: string
+                    user_id: string
+                    unread_count: number
+                    last_read_at: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    conversation_id: string
+                    user_id: string
+                    unread_count?: number
+                    last_read_at?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    unread_count?: number
+                    last_read_at?: string | null
+                }
+            }
+            messages: {
+                Row: {
+                    id: string
+                    conversation_id: string
+                    sender_id: string
+                    content: string
+                    type: 'text' | 'image' | 'link'
+                    read_by: string[] | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    conversation_id: string
+                    sender_id: string
+                    content: string
+                    type?: 'text' | 'image' | 'link'
+                    read_by?: string[] | null
+                    created_at?: string
+                }
+                Update: {
+                    read_by?: string[] | null
+                }
+            }
+            friend_requests: {
+                Row: {
+                    id: string
+                    sender_id: string
+                    receiver_id: string
+                    status: 'pending' | 'accepted' | 'rejected'
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    sender_id: string
+                    receiver_id: string
+                    status?: 'pending' | 'accepted' | 'rejected'
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    status?: 'pending' | 'accepted' | 'rejected'
+                    updated_at?: string
+                }
+            }
         }
         Views: {
             [_ in never]: never

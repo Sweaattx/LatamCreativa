@@ -34,7 +34,7 @@ export const MENU_GROUPS: MenuGroup[] = [
         id: 'portfolio',
         label: 'Portafolio',
         href: '/portfolio',
-        icon: ImageIcon,
+        icon: Briefcase,
         description: 'Trabajos y proyectos de la comunidad'
       },
       {
@@ -113,11 +113,11 @@ export const MENU_GROUPS: MenuGroup[] = [
 
 export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { id: 'home', icon: Home, label: 'Inicio' },
-  { id: 'portfolio', icon: ImageIcon, label: 'Portafolio' },
+  { id: 'portfolio', icon: Briefcase, label: 'Portafolio' },
   { id: 'blog', icon: Newspaper, label: 'Blog' },
   { id: 'forum', icon: MessageCircleQuestion, label: 'Foro' },
   { id: 'courses', icon: GraduationCap, label: 'Cursos', comingSoon: true },
-  { id: 'freelance', icon: Briefcase, label: 'Freelance', comingSoon: true },
+  { id: 'freelance', icon: ImageIcon, label: 'Freelance', comingSoon: true },
   { id: 'jobs', icon: Building2, label: 'Bolsa de Trabajo', comingSoon: true },
   { id: 'proyectos', icon: Users, label: 'Proyectos', comingSoon: true },
   { id: 'concursos', icon: Trophy, label: 'Concursos', comingSoon: true },

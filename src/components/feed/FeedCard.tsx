@@ -3,9 +3,11 @@
 import React, { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, Eye, MessageCircle, Bookmark } from 'lucide-react';
+import { Eye, Bookmark } from 'lucide-react';
 import { FeedItem } from '@/hooks/useFeed';
 import { PortfolioItem, ArticleItem } from '@/types';
+import { LikeButton } from './LikeButton';
+import { CommentButton } from './CommentButton';
 
 interface FeedCardProps {
     item: FeedItem;
@@ -127,8 +129,8 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({ item, onSave }) => {
                 {/* Type badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full uppercase tracking-wider backdrop-blur-sm ${isProject
-                            ? 'bg-accent-500/80 text-white'
-                            : 'bg-blue-500/80 text-white'
+                        ? 'bg-accent-500/80 text-white'
+                        : 'bg-blue-500/80 text-white'
                         }`}>
                         {isProject ? 'Proyecto' : 'Artículo'}
                     </span>
@@ -168,18 +170,25 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({ item, onSave }) => {
 
                         {/* Stats */}
                         <div className="flex items-center gap-3 text-white/60">
-                            <span className="flex items-center gap-1 text-xs">
-                                <Heart className="w-3.5 h-3.5" /> {fmt(likes)}
-                            </span>
+                            <LikeButton
+                                itemId={data.id}
+                                itemType={isProject ? 'project' : 'article'}
+                                initialLikes={typeof likes === 'number' ? likes : parseInt(String(likes || '0'), 10)}
+                                size="sm"
+                            />
                             {views !== undefined && (
                                 <span className="flex items-center gap-1 text-xs">
                                     <Eye className="w-3.5 h-3.5" /> {fmt(views)}
                                 </span>
                             )}
                             {comments > 0 && (
-                                <span className="flex items-center gap-1 text-xs">
-                                    <MessageCircle className="w-3.5 h-3.5" /> {fmt(comments)}
-                                </span>
+                                <CommentButton
+                                    itemId={data.id}
+                                    itemType={isProject ? 'project' : 'article'}
+                                    commentCount={comments}
+                                    slug={String(slug)}
+                                    size="sm"
+                                />
                             )}
                         </div>
                     </div>

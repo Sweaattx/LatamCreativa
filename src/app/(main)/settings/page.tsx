@@ -66,7 +66,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-dark-1">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-5 py-3 ${toastType === 'error' ? 'bg-red-500/20 border border-red-500/30 text-red-400' : 'bg-green-500/20 border border-green-500/30 text-green-400'} rounded-xl text-sm font-medium shadow-xl backdrop-blur-sm animate-in fade-in slide-in-from-top-2`}>
+        <div className={`fixed top-6 right-6 z-50 px-5 py-3 ${toastType === 'error' ? 'bg-red-500/20 border border-red-500/30 text-red-400' : 'bg-green-500/20 border border-green-500/30 text-green-400'} rounded-xl text-sm font-medium backdrop-blur-sm animate-in fade-in slide-in-from-top-2`}>
           <div className="flex items-center gap-2">
             {toastType === 'error' ? <AlertCircle className="w-4 h-4" /> : <Check className="w-4 h-4" />}
             {toast}

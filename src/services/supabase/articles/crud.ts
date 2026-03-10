@@ -14,10 +14,10 @@
 import { supabase } from '../../../lib/supabase';
 import { storageService } from '../storage';
 import { ArticleItem } from '../../../types';
-import { 
-    PaginatedResult, 
-    mapDbArticleToArticle, 
-    withTimeout, 
+import {
+    PaginatedResult,
+    mapDbArticleToArticle,
+    withTimeout,
     ArticleInsert,
     getFromCache,
     setInCache,
@@ -101,8 +101,8 @@ export const articlesCrud = {
 
             return result;
         } catch (error) {
-            console.error("Error fetching articles:", error);
-            throw error;
+            console.warn("Error fetching articles:", error instanceof Error ? error.message : 'Unknown error');
+            return { data: [], lastId: null, hasMore: false };
         }
     },
 
@@ -162,7 +162,7 @@ export const articlesCrud = {
                 .single();
 
             if (error) throw error;
-            
+
             // Type cast for safe property access
             const newArticle = newArticleRaw as { id: string; slug: string } | null;
             if (!newArticle) throw new Error('Failed to create article');
@@ -235,7 +235,7 @@ export const articlesCrud = {
             if (articleData.scheduledAt !== undefined) updateData.scheduled_at = articleData.scheduledAt;
             if (imageUrl !== undefined) updateData.image = imageUrl;
 
-             
+
             const { error } = await supabase
                 .from('articles')
                 .update(updateData as never)
@@ -309,7 +309,7 @@ export const articlesCrud = {
 
             if (error) throw error;
             if (!data) return null;
-            
+
             return mapDbArticleToArticle(data as Record<string, unknown>) as unknown as ArticleItem;
         } catch (error) {
             console.error("Error fetching article:", error);

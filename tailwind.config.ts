@@ -38,18 +38,18 @@ const config: Config = {
           2: '#A8ADB8',    // Secondary
           3: '#6B7280',    // Muted
         },
-        // Accent Amber (Creative Pulse)
+        // Accent (mode-adaptive via CSS vars)
         accent: {
-          50: '#FFFBEB',
-          100: '#FEF3C7',
-          200: '#FDE68A',
-          300: '#FCD34D',
-          400: '#FBBF24',
-          500: '#F59E0B',   // Primary accent
-          600: '#D97706',   // Hover
-          700: '#B45309',   // Active
-          subtle: 'rgba(245, 158, 11, 0.08)',
-          glow: 'rgba(245, 158, 11, 0.15)',
+          50: 'var(--accent-50, #FFFBEB)',
+          100: 'var(--accent-100, #FEF3C7)',
+          200: 'var(--accent-200, #FDE68A)',
+          300: 'var(--accent-300, #FCD34D)',
+          400: 'var(--accent-400, #FBBF24)',
+          500: 'var(--accent-500, #F59E0B)',
+          600: 'var(--accent-600, #D97706)',
+          700: 'var(--accent-700, #B45309)',
+          subtle: 'var(--accent-subtle, rgba(245, 158, 11, 0.08))',
+          glow: 'var(--accent-glow, rgba(245, 158, 11, 0.15))',
         },
         // Dev mode blue
         dev: {
@@ -101,14 +101,15 @@ const config: Config = {
         '3xl': '1.5rem',    // 24px
       },
       boxShadow: {
-        'sm': '0 1px 2px rgba(0, 0, 0, 0.4)',
-        'DEFAULT': '0 2px 8px rgba(0, 0, 0, 0.4)',
-        'md': '0 4px 12px rgba(0, 0, 0, 0.4)',
-        'lg': '0 8px 24px rgba(0, 0, 0, 0.5)',
-        'xl': '0 16px 48px rgba(0, 0, 0, 0.6)',
-        'glow-orange': '0 0 20px rgba(255, 106, 0, 0.15)',
-        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.15)',
-        'card-hover': '0 8px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 106, 0, 0.1)',
+        'sm': '0 1px 2px rgba(0, 0, 0, 0.15)',
+        'DEFAULT': '0 1px 3px rgba(0, 0, 0, 0.15)',
+        'md': '0 2px 4px rgba(0, 0, 0, 0.15)',
+        'lg': '0 2px 8px rgba(0, 0, 0, 0.15)',
+        'xl': '0 4px 12px rgba(0, 0, 0, 0.2)',
+        '2xl': '0 6px 16px rgba(0, 0, 0, 0.2)',
+        'glow-orange': '0 0 6px rgba(255, 77, 0, 0.06)',
+        'glow-blue': '0 0 6px rgba(59, 130, 246, 0.06)',
+        'card-hover': '0 2px 8px rgba(0, 0, 0, 0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
@@ -149,6 +150,10 @@ const config: Config = {
       transitionTimingFunction: {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
         'bounce': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      },
+      screens: {
+        'xs': '360px',
+        '3xl': '1920px',
       },
     },
   },
