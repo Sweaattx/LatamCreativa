@@ -91,10 +91,7 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
       {/* Icon strip */}
       <aside className="flex flex-col w-16 h-full bg-dark-1 border-r border-dark-5/50 overflow-hidden z-20">
         {/* Nav area — only this triggers the flyout */}
-        <div
-          onMouseEnter={openFlyout}
-          onMouseLeave={closeFlyout}
-        >
+        <div>
           {/* Spacer */}
           <div className="h-14" />
 
@@ -214,69 +211,6 @@ export const PrimarySidebar: React.FC<PrimarySidebarProps> = ({
           )}
         </div>
       </aside>
-
-      {/* ---- Hover Flyout Panel (Portal + Framer Motion) ---- */}
-      {typeof document !== 'undefined' && ReactDOM.createPortal(
-        <AnimatePresence>
-          {flyoutOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="fixed left-16 top-0 h-screen w-52 bg-dark-1 border-r border-dark-5/50 z-[100]"
-              style={{ boxShadow: '8px 0 24px rgba(0,0,0,0.3)' }}
-              onMouseEnter={openFlyout}
-              onMouseLeave={closeFlyout}
-            >
-              {/* Header */}
-              <div className="h-14 px-4 flex items-center border-b border-dark-5/30">
-                <h2 className="text-sm font-medium text-content-1">Explorar</h2>
-              </div>
-
-              {/* Nav sections */}
-              <nav className="flex-1 overflow-y-auto py-2 px-2" style={{ maxHeight: 'calc(100vh - 56px)' }}>
-                {sections.map((section, idx) => (
-                  <div key={idx} className="mb-4">
-                    <p className="px-2 mb-1.5 text-2xs font-semibold text-content-3 uppercase tracking-widest">
-                      {section.title}
-                    </p>
-                    <div className="space-y-0.5">
-                      {section.items.map((item) => {
-                        const isHome = item.slug === 'home';
-                        const itemPath = isHome ? '/' : `/discover/${item.slug || ''}`;
-                        const isActive = isHome
-                          ? pathname === '/'
-                          : pathname?.includes(`/discover/${item.slug}`) && item.slug;
-                        return (
-                          <Link
-                            key={item.slug || item.label}
-                            href={itemPath}
-                            onClick={() => setFlyoutOpen(false)}
-                            className={`
-                              flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm
-                              ${isActive
-                                ? isDevMode
-                                  ? 'bg-dev-subtle text-dev-400'
-                                  : 'bg-accent-subtle text-accent-500'
-                                : 'text-content-2 hover:text-content-1 hover:bg-dark-3/50'
-                              }
-                            `}
-                          >
-                            <item.icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{item.label}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
     </div>
   );
 };
