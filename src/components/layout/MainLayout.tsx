@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { PrimarySidebar } from './Navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileTabBar } from './MobileTabBar';
@@ -98,6 +99,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </svg>
       </Link>
 
+      {/* Primary Sidebar */}
+      {!isLearningMode && (
+        <PrimarySidebar
+          activeModule={state.activeModule}
+          onModuleSelect={handleModuleNavigation}
+          contentMode={state.contentMode}
+          onToggleContentMode={actions.toggleContentMode}
+        />
+      )}
 
       {/* Main Content */}
       <main id="main-content" className="relative flex min-w-0 flex-1 flex-col" role="main">
