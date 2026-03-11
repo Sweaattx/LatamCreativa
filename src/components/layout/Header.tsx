@@ -229,7 +229,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const createRef = useRef<HTMLDivElement>(null);
@@ -286,11 +286,11 @@ export function Header({ onMenuClick }: HeaderProps) {
           {/* Left: Menu */}
           <div className="flex items-center gap-3">
             <button
-              onClick={onMenuClick}
+              onClick={() => setDrawerOpen(!drawerOpen)}
               className="p-2 -ml-2 text-content-3 hover:text-content-1 transition-colors"
               aria-label="Menú"
             >
-              <Menu className="w-5 h-5" />
+              {drawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
@@ -421,10 +421,10 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
         </div>
 
-        {/* Mega Menu */}
-        <MegaMenu
-          isOpen={megaMenuOpen}
-          onClose={() => setMegaMenuOpen(false)}
+        {/* Drawer Menu */}
+        <MobileDrawer
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
           isDevMode={isDevMode}
         />
       </header>
